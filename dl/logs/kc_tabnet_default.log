@@ -1,0 +1,10 @@
+[tune] kc/tabnet: 0 trials done, running 1 more on cpu
+  trial   0 COMPLETE cv_rmse=     119,408  best=119,408
+findfont: Failed to find font weight semibold for DejaVu Sans, now using 700.
+findfont: Failed to find font weight semibold for DejaVu Sans, now using 700.
+[tune] kc/tabnet: CV RMSE 119,408 ± 3,584, R² 0.8888, final epochs = 111
+[final] kc/tabnet: training on 17290 rows for 111 epochs
+[final] explanation: permutation importance on test
+findfont: Failed to find font weight semibold for DejaVu Sans, now using 700.
+findfont: Failed to find font weight semibold for DejaVu Sans, now using 700.
+[final] kc/tabnet: test MAE 71,900 | RMSE 263,139 [121,221, 420,777] | R² 0.5420 | fit 370.3s

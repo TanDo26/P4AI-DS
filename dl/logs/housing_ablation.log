@@ -1,0 +1,11 @@
+[ablation] housing/ft_transformer: Baseline (log1p, Quantile, có FE)
+[ablation] housing/ft_transformer: Target thô (không log)
+[ablation] housing/ft_transformer: StandardScaler
+[ablation] housing/ft_transformer: Không feature engineering
+[ablation] housing/tabnet: Baseline (log1p, Quantile, có FE)
+[ablation] housing/tabnet: Target thô (không log)
+[ablation] housing/tabnet: StandardScaler
+[ablation] housing/tabnet: Không feature engineering
+findfont: Failed to find font weight semibold for DejaVu Sans, now using 700.
+findfont: Failed to find font weight semibold for DejaVu Sans, now using 700.
+[ablation] -> C:\Storage\KHMT-HCMUT\Year4\P4\Assignment\dl\results\housing\ablation.csv

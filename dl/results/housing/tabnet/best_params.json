@@ -1,0 +1,74 @@
+{
+  "dataset": "housing",
+  "model": "tabnet",
+  "params": {
+    "n_d": 16,
+    "n_steps": 3,
+    "gamma": 1.0271256151328831,
+    "n_independent": 1,
+    "n_shared": 2,
+    "lambda_sparse": 3.576287491088027e-05,
+    "momentum": 0.374541375275057,
+    "lr": 0.01,
+    "mask_type": "entmax",
+    "batch_size": 64,
+    "virtual_batch_size": 32,
+    "scaler": "standard"
+  },
+  "n_epochs_final": 48,
+  "cv": {
+    "mae_mean": 783955.3599765104,
+    "mae_std": 90700.16572829915,
+    "rmse_mean": 1085142.8223815367,
+    "rmse_std": 112322.50554259289,
+    "r2_mean": 0.6073728771744229,
+    "r2_std": 0.06535975346273395,
+    "nrmse_mean": 0.23048762298785785,
+    "nrmse_std": 0.021415680631820557,
+    "best_epochs": [
+      45,
+      48,
+      66,
+      44,
+      114
+    ],
+    "n_epochs_final": 48,
+    "fit_time_total": 43.991754699964076
+  },
+  "optuna": {
+    "best_trial": 43,
+    "best_value": 1085142.8223815367,
+    "trials": {
+      "complete": 35,
+      "pruned": 15,
+      "fail": 0
+    },
+    "sampler": "TPESampler(seed=42)",
+    "pruner": "MedianPruner(n_startup_trials=5, n_warmup_steps=1)"
+  },
+  "preprocessing": {
+    "use_fe": true,
+    "target": "log1p + standardize",
+    "scaler": "standard"
+  },
+  "seeds": {
+    "data": 42,
+    "model": 36
+  },
+  "env": {
+    "python": "3.12.15",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "device": "cpu",
+    "hardware": "Intel64 Family 6 Model 140 Stepping 1, GenuineIntel",
+    "torch_threads": 1,
+    "packages": {
+      "torch": "2.14.1+cpu",
+      "numpy": "2.5.4",
+      "pandas": "3.1.0",
+      "scikit-learn": "1.9.1",
+      "optuna": "5.0.0",
+      "pytorch-tabnet": "4.1.0",
+      "rtdl_revisiting_models": "0.0.2"
+    }
+  }
+}

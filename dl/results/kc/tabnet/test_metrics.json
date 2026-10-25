@@ -1,0 +1,62 @@
+{
+  "dataset": "kc",
+  "model": "tabnet",
+  "mae": 71900.33597207852,
+  "rmse": 263138.6750352235,
+  "r2": 0.5419799698934615,
+  "nrmse": 0.47898483622497284,
+  "ci95": {
+    "mae": [
+      66158.4516188135,
+      81037.06250555546
+    ],
+    "rmse": [
+      121220.68126761122,
+      420777.260408326
+    ],
+    "r2": [
+      -0.30079052672204454,
+      0.9027511929208234
+    ],
+    "nrmse": [
+      0.22154919693732672,
+      0.7722278414440974
+    ]
+  },
+  "fit_time": 370.2548628000077,
+  "predict_time": 0.32541910000145435,
+  "n_epochs": 111,
+  "n_train": 17290,
+  "n_test": 4323,
+  "params": {
+    "n_d": 16,
+    "n_steps": 4,
+    "gamma": 1.3,
+    "n_independent": 2,
+    "n_shared": 2,
+    "lambda_sparse": 0.0001,
+    "momentum": 0.02,
+    "lr": 0.02,
+    "mask_type": "sparsemax",
+    "batch_size": 256,
+    "virtual_batch_size": 64,
+    "scaler": "quantile",
+    "cat_emb_dim": 8
+  },
+  "env": {
+    "python": "3.12.15",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "device": "cpu",
+    "hardware": "Intel64 Family 6 Model 140 Stepping 1, GenuineIntel",
+    "torch_threads": 1,
+    "packages": {
+      "torch": "2.14.1+cpu",
+      "numpy": "2.5.4",
+      "pandas": "3.1.0",
+      "scikit-learn": "1.9.1",
+      "optuna": "5.0.0",
+      "pytorch-tabnet": "4.1.0",
+      "rtdl_revisiting_models": "0.0.2"
+    }
+  }
+}

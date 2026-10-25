@@ -1,0 +1,57 @@
+[tune] housing/ft_transformer: 0 trials done, running 50 more on cpu
+  trial   0 COMPLETE cv_rmse=   1,035,698  best=1,035,698
+  trial   1 COMPLETE cv_rmse=   1,018,551  best=1,018,551
+  trial   2 COMPLETE cv_rmse=   1,045,304  best=1,018,551
+  trial   3 COMPLETE cv_rmse=   1,039,882  best=1,018,551
+  trial   4 COMPLETE cv_rmse=   1,049,742  best=1,018,551
+  trial   5 COMPLETE cv_rmse=   1,026,800  best=1,018,551
+  trial   6 COMPLETE cv_rmse=   1,038,521  best=1,018,551
+  trial   7 COMPLETE cv_rmse=   1,041,624  best=1,018,551
+  trial   8 PRUNED   cv_rmse=   1,023,013  best=1,018,551
+  trial   9 PRUNED   cv_rmse=   1,022,797  best=1,018,551
+  trial  10 PRUNED   cv_rmse=   1,008,017  best=1,018,551
+  trial  11 PRUNED   cv_rmse=   1,017,042  best=1,018,551
+  trial  12 PRUNED   cv_rmse=   1,027,664  best=1,018,551
+  trial  13 PRUNED   cv_rmse=   1,031,660  best=1,018,551
+  trial  14 PRUNED   cv_rmse=   1,042,682  best=1,018,551
+  trial  15 PRUNED   cv_rmse=   1,060,061  best=1,018,551
+  trial  16 PRUNED   cv_rmse=   1,038,158  best=1,018,551
+  trial  17 PRUNED   cv_rmse=   1,062,037  best=1,018,551
+  trial  18 PRUNED   cv_rmse=   1,052,718  best=1,018,551
+  trial  19 PRUNED   cv_rmse=   1,069,399  best=1,018,551
+  trial  20 COMPLETE cv_rmse=   1,033,236  best=1,018,551
+  trial  21 PRUNED   cv_rmse=   1,046,730  best=1,018,551
+  trial  22 PRUNED   cv_rmse=   1,110,649  best=1,018,551
+  trial  23 PRUNED   cv_rmse=   1,010,270  best=1,018,551
+  trial  24 PRUNED   cv_rmse=   1,074,752  best=1,018,551
+  trial  25 COMPLETE cv_rmse=   1,010,831  best=1,010,831
+  trial  26 COMPLETE cv_rmse=   1,010,087  best=1,010,087
+  trial  27 COMPLETE cv_rmse=   1,013,085  best=1,010,087
+  trial  28 COMPLETE cv_rmse=   1,017,222  best=1,010,087
+  trial  29 PRUNED   cv_rmse=   1,004,559  best=1,010,087
+  trial  30 COMPLETE cv_rmse=   1,019,654  best=1,010,087
+  trial  31 PRUNED   cv_rmse=   1,016,060  best=1,010,087
+  trial  32 PRUNED   cv_rmse=   1,000,951  best=1,010,087
+  trial  33 PRUNED   cv_rmse=   1,049,017  best=1,010,087
+  trial  34 PRUNED   cv_rmse=   1,017,156  best=1,010,087
+  trial  35 PRUNED   cv_rmse=   1,008,694  best=1,010,087
+  trial  36 COMPLETE cv_rmse=   1,020,949  best=1,010,087
+  trial  37 PRUNED   cv_rmse=   1,013,100  best=1,010,087
+  trial  38 PRUNED   cv_rmse=   1,017,883  best=1,010,087
+  trial  39 PRUNED   cv_rmse=   1,019,370  best=1,010,087
+  trial  40 PRUNED   cv_rmse=   1,024,481  best=1,010,087
+  trial  41 PRUNED   cv_rmse=   1,018,623  best=1,010,087
+  trial  42 PRUNED   cv_rmse=   1,024,776  best=1,010,087
+  trial  43 PRUNED   cv_rmse=   1,016,583  best=1,010,087
+  trial  44 PRUNED   cv_rmse=   1,005,962  best=1,010,087
+  trial  45 PRUNED   cv_rmse=   1,000,130  best=1,010,087
+  trial  46 PRUNED   cv_rmse=   1,004,483  best=1,010,087
+  trial  47 PRUNED   cv_rmse=   1,045,861  best=1,010,087
+  trial  48 PRUNED   cv_rmse=   1,018,854  best=1,010,087
+  trial  49 PRUNED   cv_rmse=     997,367  best=1,010,087
+findfont: Failed to find font weight semibold for DejaVu Sans, now using 700.
+findfont: Failed to find font weight semibold for DejaVu Sans, now using 700.
+[tune] housing/ft_transformer: CV RMSE 1,010,087 ± 61,494, R² 0.6607, final epochs = 63
+[final] housing/ft_transformer: training on 436 rows for 63 epochs
+[final] explanation: permutation importance on test
+[final] housing/ft_transformer: test MAE 1,000,278 | RMSE 1,409,501 [1,115,264, 1,704,752] | R² 0.6070 | fit 9.6s

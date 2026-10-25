@@ -1,0 +1,13 @@
+--extra-index-url https://download.pytorch.org/whl/cu130
+torch==2.14.1
+numpy==2.5.4
+pandas==3.1.0
+scipy==1.18.1
+scikit-learn==1.9.1
+optuna==5.0.0
+pytorch-tabnet==4.1.0
+rtdl_revisiting_models==0.0.2
+matplotlib==3.11.2
+joblib==1.6.0
+pytest==9.1.1
+    

@@ -1,0 +1,59 @@
+[tune] housing/tabnet: 0 trials done, running 50 more on cpu
+  trial   0 COMPLETE cv_rmse=   1,254,602  best=1,254,602
+  trial   1 COMPLETE cv_rmse=   1,242,910  best=1,242,910
+  trial   2 COMPLETE cv_rmse=   1,211,994  best=1,211,994
+  trial   3 COMPLETE cv_rmse=   1,165,678  best=1,165,678
+  trial   4 COMPLETE cv_rmse=   1,175,508  best=1,165,678
+  trial   5 COMPLETE cv_rmse=   1,256,053  best=1,165,678
+  trial   6 COMPLETE cv_rmse=   1,207,243  best=1,165,678
+  trial   7 COMPLETE cv_rmse=   1,191,111  best=1,165,678
+  trial   8 PRUNED   cv_rmse=   1,211,528  best=1,165,678
+  trial   9 PRUNED   cv_rmse=   1,163,211  best=1,165,678
+  trial  10 PRUNED   cv_rmse=   1,292,403  best=1,165,678
+  trial  11 COMPLETE cv_rmse=   1,186,314  best=1,165,678
+  trial  12 COMPLETE cv_rmse=   1,556,954  best=1,165,678
+  trial  13 PRUNED   cv_rmse=   1,167,286  best=1,165,678
+  trial  14 COMPLETE cv_rmse=   1,183,935  best=1,165,678
+  trial  15 COMPLETE cv_rmse=   1,206,357  best=1,165,678
+  trial  16 COMPLETE cv_rmse=   1,153,279  best=1,153,279
+  trial  17 COMPLETE cv_rmse=   1,104,399  best=1,104,399
+  trial  18 COMPLETE cv_rmse=   1,114,735  best=1,104,399
+  trial  19 COMPLETE cv_rmse=   1,301,375  best=1,104,399
+  trial  20 PRUNED   cv_rmse=   1,162,837  best=1,104,399
+  trial  21 COMPLETE cv_rmse=   1,095,273  best=1,095,273
+  trial  22 PRUNED   cv_rmse=   1,148,875  best=1,095,273
+  trial  23 PRUNED   cv_rmse=   1,188,346  best=1,095,273
+  trial  24 COMPLETE cv_rmse=   1,142,585  best=1,095,273
+  trial  25 PRUNED   cv_rmse=   1,247,879  best=1,095,273
+  trial  26 COMPLETE cv_rmse=   1,177,455  best=1,095,273
+  trial  27 COMPLETE cv_rmse=   1,181,622  best=1,095,273
+  trial  28 PRUNED   cv_rmse=   1,139,973  best=1,095,273
+  trial  29 COMPLETE cv_rmse=   1,099,390  best=1,095,273
+  trial  30 COMPLETE cv_rmse=   1,133,098  best=1,095,273
+  trial  31 PRUNED   cv_rmse=   1,166,896  best=1,095,273
+  trial  32 COMPLETE cv_rmse=   1,134,290  best=1,095,273
+  trial  33 PRUNED   cv_rmse=   1,192,687  best=1,095,273
+  trial  34 PRUNED   cv_rmse=   1,155,656  best=1,095,273
+  trial  35 PRUNED   cv_rmse=   1,171,493  best=1,095,273
+  trial  36 COMPLETE cv_rmse=   1,172,743  best=1,095,273
+  trial  37 PRUNED   cv_rmse=   1,239,185  best=1,095,273
+  trial  38 COMPLETE cv_rmse=   1,168,636  best=1,095,273
+  trial  39 COMPLETE cv_rmse=   1,123,267  best=1,095,273
+  trial  40 COMPLETE cv_rmse=   1,211,994  best=1,095,273
+  trial  41 COMPLETE cv_rmse=   1,121,635  best=1,095,273
+  trial  42 PRUNED   cv_rmse=   1,162,901  best=1,095,273
+  trial  43 COMPLETE cv_rmse=   1,085,143  best=1,085,143
+  trial  44 COMPLETE cv_rmse=   1,173,752  best=1,085,143
+  trial  45 COMPLETE cv_rmse=   1,110,550  best=1,085,143
+  trial  46 COMPLETE cv_rmse=   1,097,645  best=1,085,143
+  trial  47 COMPLETE cv_rmse=   1,153,782  best=1,085,143
+  trial  48 COMPLETE cv_rmse=   1,162,629  best=1,085,143
+  trial  49 COMPLETE cv_rmse=   1,157,431  best=1,085,143
+findfont: Failed to find font weight semibold for DejaVu Sans, now using 700.
+findfont: Failed to find font weight semibold for DejaVu Sans, now using 700.
+[tune] housing/tabnet: CV RMSE 1,085,143 ± 112,323, R² 0.6074, final epochs = 48
+[final] housing/tabnet: training on 436 rows for 48 epochs
+[final] explanation: permutation importance on test
+findfont: Failed to find font weight semibold for DejaVu Sans, now using 700.
+findfont: Failed to find font weight semibold for DejaVu Sans, now using 700.
+[final] housing/tabnet: test MAE 1,130,911 | RMSE 1,622,363 [1,275,743, 1,958,275] | R² 0.4793 | fit 5.7s
