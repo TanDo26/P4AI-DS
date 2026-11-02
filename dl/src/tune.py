@@ -42,6 +42,10 @@ def tune(dataset: str, model_name: str, n_trials: int, device: str, timeout: flo
     study = load_study(dataset, model_name)
     finished = sum(t.state in (TrialState.COMPLETE, TrialState.PRUNED) for t in study.trials)
     remaining = max(0, n_trials - finished)
+    if not remaining and (results_dir(dataset, model_name) / "best_params.json").exists():
+        # re-exporting would stamp best_params.json with this machine's hardware instead of the tuning machine's
+        print(f"[tune] {dataset}/{model_name}: {finished} trials done, already exported", flush=True)
+        return
     enqueue_fixed_trials(study, module.fixed_trials(dataset), remaining)  # run first, before any sampled trial
     print(f"[tune] {dataset}/{model_name}: {finished} trials done, running {remaining} more on {device}", flush=True)
 
