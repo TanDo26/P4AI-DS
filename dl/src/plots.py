@@ -20,8 +20,8 @@ MUTED = "#898781"
 GRID = "#e1e0d9"
 AXIS = "#c3c2b7"
 CATEGORICAL = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#6250d6", "#e34948"]
-MODEL_COLORS = {"ft_transformer": CATEGORICAL[0], "tabnet": CATEGORICAL[1]}
-MODEL_LABELS = {"ft_transformer": "FT-Transformer", "tabnet": "TabNet"}
+MODEL_COLORS = {"ft_transformer": CATEGORICAL[0], "tabnet": CATEGORICAL[1], "mlp": CATEGORICAL[2]}
+MODEL_LABELS = {"ft_transformer": "FT-Transformer", "tabnet": "TabNet", "mlp": "MLP"}
 DATASET_LABELS = {"housing": "Housing (545 dòng)", "kc": "King County (21.613 dòng)"}
 SEQUENTIAL = LinearSegmentedColormap.from_list(
     "blue", ["#fcfcfb", "#cde2fb", "#86b6ef", "#3987e5", "#256abf", "#184f95", "#0d366b"])
@@ -42,7 +42,7 @@ def model_color(name: str) -> str:
     if name in MODEL_COLORS:
         return MODEL_COLORS[name]
     extra = [c for c in CATEGORICAL if c not in MODEL_COLORS.values()]  # ML models joining later
-    MODEL_COLORS[name] = extra[(len(MODEL_COLORS) - 2) % len(extra)]
+    MODEL_COLORS[name] = extra[0] if extra else CATEGORICAL[len(MODEL_COLORS) % len(CATEGORICAL)]
     return MODEL_COLORS[name]
 
 
@@ -142,7 +142,7 @@ def importance_bars(df: pd.DataFrame, value: str, path: Path, title: str, xlabel
 
 
 def tabnet_masks(masks: dict, feature_names: list[str], path: Path, title: str, n_rows: int = 12) -> None:
-    """Small multiples: one heatmap per decision step, rows = sample test houses."""
+    """Small multiples: one heatmap per decision step, rows = sample validation houses."""
     steps = sorted(masks)
     vmax = max(float(masks[s][:n_rows].max()) for s in steps) or 1.0
     fig, axes = plt.subplots(1, len(steps), figsize=(1.0 + 0.28 * len(feature_names) * len(steps), 0.25 * n_rows + 2.2),
@@ -152,7 +152,7 @@ def tabnet_masks(masks: dict, feature_names: list[str], path: Path, title: str, 
         ax.set_title(f"Bước {s + 1}", fontsize=10)
         ax.set_xticks(range(len(feature_names)), feature_names, rotation=90, fontsize=7)
         ax.grid(False)
-    axes[0][0].set_ylabel("Căn nhà (test)")
+    axes[0][0].set_ylabel("Căn nhà (validation)")
     fig.colorbar(im, ax=axes[0].tolist(), shrink=0.8, label="Trọng số mask")
     fig.suptitle(title, x=0.01, ha="left", fontsize=11, fontweight="semibold")
     _save(fig, path)

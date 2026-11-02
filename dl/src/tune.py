@@ -41,7 +41,7 @@ def tune(dataset: str, model_name: str, n_trials: int, device: str, timeout: flo
         with Timer() as t:
             res = run_cv(dataset, model_name, params, device=device, trial=trial)
         s = res["summary"]
-        for key in ("mae_mean", "rmse_std", "r2_mean", "n_epochs_final", "best_epochs"):
+        for key in ("mae_mean", "rmse_std", "r2_mean", "best_epochs"):
             trial.set_user_attr(key, s[key])
         trial.set_user_attr("cv_seconds", t.elapsed)
         trial.set_user_attr("folds", res["folds"].to_dict("records"))
@@ -69,7 +69,8 @@ def export(study: optuna.Study, dataset: str, model_name: str, device: str) -> N
     out = results_dir(dataset, model_name)
     trials = study.trials_dataframe(attrs=("number", "value", "state", "params", "user_attrs", "duration"))
     trials["state"] = trials["state"].astype(str).str.replace("TrialState.", "", regex=False)
-    trials.drop(columns=["user_attrs_folds", "user_attrs_histories"], errors="ignore").to_csv(
+    # user_attrs_n_epochs_final: written by trials run before the final model switched to early stopping
+    trials.drop(columns=["user_attrs_folds", "user_attrs_histories", "user_attrs_n_epochs_final"], errors="ignore").to_csv(
         out / "optuna_trials.csv", index=False)
     best = study.best_trial
     params = best.user_attrs["params"]
@@ -85,7 +86,6 @@ def export(study: optuna.Study, dataset: str, model_name: str, device: str) -> N
         "dataset": dataset,
         "model": model_name,
         "params": params,
-        "n_epochs_final": s["n_epochs_final"],
         "cv": s,
         "optuna": {"best_trial": best.number, "best_value": best.value, "trials": counts,
                    "sampler": f"TPESampler(seed={SEED_DATA})", "pruner": "MedianPruner(n_startup_trials=5, n_warmup_steps=1)"},
@@ -96,4 +96,4 @@ def export(study: optuna.Study, dataset: str, model_name: str, device: str) -> N
 
     plot_tuning(dataset, model_name, study)
     print(f"[tune] {dataset}/{model_name}: CV RMSE {s['rmse_mean']:,.0f} ± {s['rmse_std']:,.0f}, "
-          f"R² {s['r2_mean']:.4f}, final epochs = {s['n_epochs_final']}", flush=True)
+          f"R² {s['r2_mean']:.4f}", flush=True)

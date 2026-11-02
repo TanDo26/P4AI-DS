@@ -64,7 +64,7 @@ dl/
 │   ├── metrics.py               # mae/rmse/r2 trên giá gốc, nrmse, bootstrap_ci()
 │   ├── cv.py                    # run_cv(model, params, dataset) → metric từng fold, best_epoch, history
 │   ├── tune.py                  # Optuna: objective = mean CV RMSE
-│   ├── final.py                 # train lại trên full train → test 1 lần → lưu kết quả
+│   ├── final.py                 # train lại trên 85% train, early stopping trên 15% → test 1 lần → lưu kết quả
 │   ├── explain.py               # permutation importance + giải thích riêng của từng model
 │   ├── plots.py
 │   └── models/
@@ -124,8 +124,9 @@ train ─ KFold(5, shuffle, seed 42) ─► với mỗi fold k:
     train model (seed 36), early stopping trên inner_val  → ghi best_epoch_k
     predict fold_val → đổi về giá gốc → MAE_k, RMSE_k, R²_k
 Optuna chọn hyperparams theo mean(RMSE_k)              [chỉ dùng train]
-Final: fit preprocessor trên full train
-       train với n_epochs = median(best_epoch_k) của cấu hình tốt nhất (không cần val)
+Final: train ─ split(0.15, seed 42) ─► fit (85%) | val (15%)   [cùng dòng với MLP]
+       fit preprocessor + target scaler trên fit, train cấu hình tốt nhất, early stopping trên val
+       giải thích model (permutation importance, attention / mask) trên val
        predict test đúng 1 lần → metric + bootstrap CI + thời gian
 ```
 
@@ -150,7 +151,7 @@ Lý do dùng `inner_val` thay vì early stopping thẳng trên `fold_val`: nếu
 
 ### 3.7 Giải thích model (chung cho cả 2)
 
-- **Permutation importance** [19] trên test, đo bằng mức tăng RMSE khi xáo trộn từng feature, lặp 5 lần (seed 42). Phương pháp này không phụ thuộc model, nên so được trực tiếp với feature importance của nhóm ML.
+- **Permutation importance** [19] trên 15% validation của model cuối (cùng các dòng mà MLP dùng), đo bằng mức tăng RMSE khi xáo trộn từng feature, lặp 5 lần (seed 42). Phương pháp này không phụ thuộc model, nên so được trực tiếp với feature importance của nhóm ML. Test chỉ dùng cho metric và phân tích sai số.
 - Mỗi model có thêm cách giải thích riêng: attention map cho FT-Transformer, mask cho TabNet (mô tả ở mục của từng model).
 - Tuỳ chọn nếu dư thời gian: SHAP [20] cho model tốt nhất.
 
@@ -242,7 +243,7 @@ Chạy **cấu hình mặc định trước** để có điểm tham chiếu, r�
 
 ### 4.7 Giải thích
 
-- **Attention map:** lấy trung bình attention từ token `[CLS]` tới từng feature, qua mọi head, layer và mẫu test. [1] đề xuất cách này như một thước đo feature importance rẻ.
+- **Attention map:** lấy trung bình attention từ token `[CLS]` tới từng feature, qua mọi head, layer và mẫu của tập validation 15%. [1] đề xuất cách này như một thước đo feature importance rẻ.
   Lấy attention bằng forward hook trên module attention; nếu package không trả về attention probabilities thì tự viết lại lớp attention (~30 dòng).
 - **Permutation importance** (Mục 3.7) để đối chiếu với attention map.
 
@@ -302,14 +303,14 @@ model.fit(
     max_epochs=300, patience=30,
     batch_size=256, virtual_batch_size=64, drop_last=False,
 )
-best_epoch = model.best_epoch                  # lưu lại để train final
+best_epoch = model.best_epoch                  # 0-based; ghi lại best_epoch + 1
 importance = model.feature_importances_        # importance toàn cục
-explain_matrix, masks = model.explain(X_test)  # importance từng mẫu + mask từng bước
+explain_matrix, masks = model.explain(X_val)   # importance từng mẫu + mask từng bước
 ```
 
 > ⚠️ Mặc định của thư viện là `batch_size=1024`, `virtual_batch_size=128`. Các giá trị này **lớn hơn cả fold-train của Housing** (~300 dòng). Phải hạ xuống, ví dụ batch 32–128 và virtual batch 16–64, và giữ `drop_last=False`.
 >
-> Final model: gọi `fit` trên full train **không truyền `eval_set`**, với `max_epochs = median(best_epoch_k)`.
+> Final model: gọi `fit` trên 85% train với `eval_set` là 15% còn lại (seed 42), giống như trong CV.
 
 ### 5.5 Không gian tuning
 

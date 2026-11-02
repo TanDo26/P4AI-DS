@@ -1,0 +1,3 @@
+[final] housing/ft_transformer: training on 370 rows, early stopping on 66
+[final] explanation on the 66-row validation split
+[final] housing/ft_transformer: test MAE 987,572 | RMSE 1,351,028 [1,078,338, 1,633,617] | R² 0.6389 | fit 15.5s, best epoch 42

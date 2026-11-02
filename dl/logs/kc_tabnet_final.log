@@ -1,0 +1,3 @@
+[final] kc/tabnet: training on 14696 rows, early stopping on 2594
+[final] explanation on the 2594-row validation split
+[final] kc/tabnet: test MAE 67,330 | RMSE 129,377 [114,206, 147,870] | R² 0.8893 | fit 275.7s, best epoch 103
