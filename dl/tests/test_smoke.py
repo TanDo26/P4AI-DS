@@ -64,4 +64,4 @@ def test_model_fit_predict(housing, model_name):
         assert np.isclose(att["attention"].sum(), 1.0) and set(att["feature"]) == set(pre.feature_names)
     else:
         df, masks = tabnet_importance(model, pre.transform(X.iloc[val]), pre.feature_names)
-        assert np.isclose(df["importance_test"].sum(), 1.0) and len(masks) == params["n_steps"]
+        assert np.isclose(df["importance_val"].sum(), 1.0) and len(masks) == params["n_steps"]

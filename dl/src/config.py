@@ -8,6 +8,9 @@ DATA_DIR = Path(os.environ.get("HOUSE_DATA_DIR", DL_DIR.parent))
 SPLITS_DIR = DL_DIR / "splits"
 RESULTS_DIR = DL_DIR / "results"
 FIGURES_DIR = DL_DIR / "figures"
+# Output of dl_mlp_project/dl_mlp_experiment.py (--output_dir results_mlp); summary.py adds the MLP from it.
+MLP_RESULTS_DIR = DL_DIR.parent / "dl_mlp_project" / "results_mlp"
+MLP_DATASET_DIRS = {"housing": "housing_prices", "kc": "king_county"}
 
 SEED_DATA = 42   # every split / resampling of data (train-test, KFold, inner_val, subsets, bootstrap)
 SEED_MODEL = 36  # randomness inside models (team rule)

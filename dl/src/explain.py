@@ -66,10 +66,10 @@ def ft_attention_importance(model, X, feature_names: list[str], batch_size: int 
 
 
 def tabnet_importance(model, X_matrix: np.ndarray, feature_names: list[str]) -> tuple[pd.DataFrame, dict]:
-    """Global importance from training (feature_importances_) and from test rows (explain), plus masks."""
+    """Global importance from training (feature_importances_) and from validation rows (explain), plus masks."""
     explain_matrix, masks = model.explain(X_matrix)
-    test_imp = explain_matrix.sum(axis=0)
+    val_imp = explain_matrix.sum(axis=0)
     df = pd.DataFrame({"feature": feature_names,
                        "importance_train": model.reg_.feature_importances_,
-                       "importance_test": test_imp / test_imp.sum()})
-    return df.sort_values("importance_test", ascending=False, ignore_index=True), masks
+                       "importance_val": val_imp / val_imp.sum()})
+    return df.sort_values("importance_val", ascending=False, ignore_index=True), masks

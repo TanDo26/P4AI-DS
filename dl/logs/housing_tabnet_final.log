@@ -1,0 +1,3 @@
+[final] housing/tabnet: training on 370 rows, early stopping on 66
+[final] explanation on the 66-row validation split
+[final] housing/tabnet: test MAE 1,100,857 | RMSE 1,510,134 [1,207,546, 1,799,102] | R² 0.5488 | fit 9.9s, best epoch 38

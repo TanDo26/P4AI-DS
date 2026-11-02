@@ -12,7 +12,6 @@
     "weight_decay": 1.3873642432750587e-05,
     "scaler": "quantile"
   },
-  "n_epochs_final": 63,
   "cv": {
     "mae_mean": 726787.9220987567,
     "mae_std": 48413.41215336815,
@@ -29,7 +28,6 @@
       52,
       82
     ],
-    "n_epochs_final": 63,
     "fit_time_total": 55.516256600036286
   },
   "optuna": {

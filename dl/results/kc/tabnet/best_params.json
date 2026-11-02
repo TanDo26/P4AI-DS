@@ -16,7 +16,6 @@
     "scaler": "quantile",
     "cat_emb_dim": 8
   },
-  "n_epochs_final": 111,
   "cv": {
     "mae_mean": 67758.06628268471,
     "mae_std": 2663.314500522099,
@@ -33,7 +32,6 @@
       129,
       111
     ],
-    "n_epochs_final": 111,
     "fit_time_total": 1833.5813900000649
   },
   "optuna": {

@@ -19,7 +19,6 @@ def summarize(folds: pd.DataFrame) -> dict:
         out[f"{m}_mean"] = float(folds[m].mean())
         out[f"{m}_std"] = float(folds[m].std(ddof=1))
     out["best_epochs"] = [int(e) for e in folds["best_epoch"]]
-    out["n_epochs_final"] = max(1, int(round(float(np.median(folds["best_epoch"])))))
     out["fit_time_total"] = float(folds["fit_time"].sum())
     return out
 

@@ -46,22 +46,25 @@ def plot_test(dataset: str, model_name: str) -> None:
 
     perm = pd.read_csv(out / "feature_importance_permutation.csv")
     plots.importance_bars(perm, "rmse_increase_mean", figs / "importance_permutation.png",
-                          f"{label} — permutation importance ({dataset})", "Mức tăng RMSE khi xáo trộn feature (giá gốc)",
+                          f"{label} — permutation importance, validation 15% ({dataset})",
+                          "Mức tăng RMSE khi xáo trộn feature (giá gốc)",
                           color, err="rmse_increase_std", money=True)
     if model_name == "ft_transformer":
         att = pd.read_csv(out / "feature_importance_attention.csv")
         plots.importance_bars(att, "attention", figs / "importance_attention.png",
-                              f"{label} — attention [CLS] → feature ({dataset})", "Attention trung bình (tổng = 1)", color)
+                              f"{label} — attention [CLS] → feature, validation 15% ({dataset})",
+                              "Attention trung bình (tổng = 1)", color)
     else:
         imp = pd.read_csv(out / "feature_importance_tabnet.csv")
-        plots.importance_bars(imp, "importance_test", figs / "importance_tabnet.png",
-                              f"{label} — feature importance từ mask ({dataset})", "Importance tổng hợp (tổng = 1)", color)
+        plots.importance_bars(imp, "importance_val", figs / "importance_tabnet.png",
+                              f"{label} — feature importance từ mask, validation 15% ({dataset})",
+                              "Importance tổng hợp (tổng = 1)", color)
         masks_file = out / "tabnet_masks.npz"
         if masks_file.exists():
             saved = np.load(masks_file)
             masks = {int(k.split("_")[1]): saved[k] for k in saved.files if k.startswith("step_")}
             plots.tabnet_masks(masks, list(saved["feature_names"]), figs / "tabnet_masks.png",
-                               f"{label} — mask từng bước quyết định, 12 căn nhà test đầu tiên ({dataset})")
+                               f"{label} — mask từng bước quyết định, 12 căn nhà validation đầu tiên ({dataset})")
 
 
 def replot_all() -> None:

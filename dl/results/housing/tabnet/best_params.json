@@ -15,7 +15,6 @@
     "virtual_batch_size": 32,
     "scaler": "standard"
   },
-  "n_epochs_final": 48,
   "cv": {
     "mae_mean": 783955.3599765104,
     "mae_std": 90700.16572829915,
@@ -32,7 +31,6 @@
       44,
       114
     ],
-    "n_epochs_final": 48,
     "fit_time_total": 43.991754699964076
   },
   "optuna": {

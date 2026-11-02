@@ -1,5 +1,5 @@
 """Stateful preprocessing. Fit only on the rows whose labels train the weights (inner_train
-during CV, the full train set for the final model), then transform everything else."""
+during CV, the 85% fit part of the train set for the final model), then transform everything else."""
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import OrdinalEncoder, QuantileTransformer, StandardScaler
@@ -127,17 +127,17 @@ def preprocessing_markdown(dataset: str, model_name: str, spec: FeatureSpec, sca
         "## Bước stateless (từng dòng, không học tham số)",
         *[f"- {s}" for s in stateless],
         "",
-        "## Bước stateful (fit trên inner_train trong CV; trên toàn bộ train cho model cuối)",
+        "## Bước stateful (fit trên inner_train trong CV; trên phần fit 85% của train cho model cuối)",
         "",
         "| Bước | Cột | Fit trên | Lý do |",
         "|---|---|---|---|",
-        f"| {scaler_name} | {', '.join(spec.cont)} | inner_train / train | Cột liên tục, lệch phải; scaler chọn bằng CV |",
-        f"| StandardScaler | {', '.join(spec.ord)} | inner_train / train | Cột thứ tự, ít giá trị |",
+        f"| {scaler_name} | {', '.join(spec.cont)} | inner_train / phần fit 85% | Cột liên tục, lệch phải; scaler chọn bằng CV |",
+        f"| StandardScaler | {', '.join(spec.ord)} | inner_train / phần fit 85% | Cột thứ tự, ít giá trị |",
         f"| Giữ nguyên 0/1 | {', '.join(spec.bin)} | — | Cờ nhị phân |",
-        f"| OrdinalEncoder (+1, index 0 = giá trị lạ) | {', '.join(spec.cat)} | inner_train / train | {cat_note} |",
-        ("| Target: `log1p(price)` rồi chuẩn hoá (μ, σ) | price | inner_train / train | Giá lệch phải; dự đoán được đổi về giá gốc bằng `expm1` trước khi tính metric |"
+        f"| OrdinalEncoder (+1, index 0 = giá trị lạ) | {', '.join(spec.cat)} | inner_train / phần fit 85% | {cat_note} |",
+        ("| Target: `log1p(price)` rồi chuẩn hoá (μ, σ) | price | inner_train / phần fit 85% | Giá lệch phải; dự đoán được đổi về giá gốc bằng `expm1` trước khi tính metric |"
          if target_log else
-         "| Target: chuẩn hoá (μ, σ) trên giá gốc | price | inner_train / train | Ablation không dùng log |"),
+         "| Target: chuẩn hoá (μ, σ) trên giá gốc | price | inner_train / phần fit 85% | Ablation không dùng log |"),
         "",
     ]
     return "\n".join(lines)
