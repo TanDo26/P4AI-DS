@@ -2,6 +2,8 @@
 
 > **Mục tiêu project:** dự đoán giá nhà và **so sánh hiệu quả giữa Classical ML và Deep Learning trên 2 dataset có quy mô khác nhau**.
 > Tài liệu này mô tả cách hiện thực 2 model DL (không thuộc họ MLP) sao cho kết quả **so sánh công bằng được** với nhóm ML.
+>
+> MLP (từ code MLP gốc của nhóm) cũng chạy trong pipeline này, với cùng split, cùng feature engineering và cùng cách đánh giá; chi tiết ở mục *MLP* trong [`README.md`](README.md).
 
 | Mục | Nội dung |
 |---|---|

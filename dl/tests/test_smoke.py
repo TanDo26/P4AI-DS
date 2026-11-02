@@ -1,13 +1,16 @@
 """Fast end-to-end checks of the building blocks on a few hundred Housing rows."""
 import numpy as np
+import optuna
 import pytest
+from optuna.trial import TrialState
 
 from src.data import load_dataset
 from src.explain import ft_attention_importance, permutation_importance, tabnet_importance
 from src.metrics import bootstrap_ci, regression_metrics
-from src.models import ft_transformer, get_model_module, tabnet
+from src.models import ft_transformer, get_model_module, mlp, tabnet
 from src.preprocess import TabularPreprocessor, TargetTransformer
 from src.splits import load_train_idx, make_splits
+from src.tune import enqueue_fixed_trials
 
 
 @pytest.fixture(scope="module")
@@ -22,6 +25,7 @@ def housing():
 def short_training(monkeypatch):
     monkeypatch.setattr(ft_transformer, "train_config", lambda n: {"batch_size": 32, "max_epochs": 5, "patience": 2})
     monkeypatch.setattr(tabnet, "MAX_EPOCHS", 5)
+    monkeypatch.setattr(mlp, "MAX_EPOCHS", 5)
 
 
 def test_target_roundtrip(housing):
@@ -38,7 +42,29 @@ def test_metrics_and_bootstrap():
     assert ci["rmse"][0] <= regression_metrics(y, pred)["rmse"] <= ci["rmse"][1]
 
 
-@pytest.mark.parametrize("model_name", ["ft_transformer", "tabnet"])
+def test_onehot_preprocessing_for_mlp(housing):
+    X, _, spec, tr, val = housing
+    pre = TabularPreprocessor(spec, "onehot", "standard").fit(X.iloc[tr])
+    x = pre.transform(X.iloc[val])
+    n_levels = X["furnishingstatus"].nunique()
+    assert x.dtype == np.float32 and x.shape == (len(val), len(spec.num) + n_levels) == (len(val), len(pre.feature_names))
+    assert np.allclose(x[:, len(spec.num):].sum(axis=1), 1.0)  # exactly one level per row
+
+
+def test_fixed_trials_are_queued_again_after_an_interruption():
+    optuna.logging.set_verbosity(optuna.logging.WARNING)
+    study = optuna.create_study()
+    fixed = mlp.fixed_trials("housing")
+    enqueue_fixed_trials(study, fixed, len(fixed))
+    assert len(study.trials) == len(mlp.CONFIGS)
+    trial = study.ask()  # first configuration, interrupted
+    study.tell(trial, state=TrialState.FAIL)
+    enqueue_fixed_trials(study, fixed, len(fixed))
+    waiting = [t.system_attrs["fixed_params"] for t in study.trials if t.state == TrialState.WAITING]
+    assert sorted(w["config"] for w in waiting) == sorted(mlp.CONFIGS)
+
+
+@pytest.mark.parametrize("model_name", ["ft_transformer", "tabnet", "mlp"])
 def test_model_fit_predict(housing, model_name):
     X, y, spec, tr, val = housing
     module = get_model_module(model_name)
@@ -62,6 +88,6 @@ def test_model_fit_predict(housing, model_name):
     if model_name == "ft_transformer":
         att = ft_attention_importance(model, pre.transform(X.iloc[val]), pre.feature_names)
         assert np.isclose(att["attention"].sum(), 1.0) and set(att["feature"]) == set(pre.feature_names)
-    else:
+    elif model_name == "tabnet":
         df, masks = tabnet_importance(model, pre.transform(X.iloc[val]), pre.feature_names)
         assert np.isclose(df["importance_val"].sum(), 1.0) and len(masks) == params["n_steps"]

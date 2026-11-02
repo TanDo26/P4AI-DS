@@ -3,7 +3,8 @@
     python run.py splits
     python run.py tune  --dataset housing --model ft_transformer --n-trials 50
     python run.py final --dataset housing --model ft_transformer
-    python run.py all   --dataset housing                      # tune + final, both models
+    python run.py tune  --dataset kc --model mlp               # the MLP's 5 fixed configurations
+    python run.py all   --dataset housing                      # tune + final, every model
     python run.py ablation --dataset kc
     python run.py size-curve
     python run.py summary [--ml-results ml.csv]
@@ -14,14 +15,14 @@ import sys
 import warnings
 from pathlib import Path
 
-from src.config import DATASETS, DEFAULT_N_TRIALS, MODEL_NAMES
+from src.config import DATASETS, MODEL_NAMES
 from src.utils import configure_torch, resolve_device
 
 warnings.filterwarnings("ignore", message=".*ExperimentalWarning.*")
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="DL house-price experiments (FT-Transformer, TabNet)")
+    parser = argparse.ArgumentParser(description="DL house-price experiments (FT-Transformer, TabNet, MLP)")
     parser.add_argument("--device", default="auto", help="auto | cpu | cuda")
     parser.add_argument("--threads", type=int, default=None, help="torch CPU threads")
     sub = parser.add_subparsers(dest="cmd", required=True)
@@ -34,7 +35,7 @@ def main() -> None:
         p.add_argument("--dataset", choices=DATASETS, required=True)
         p.add_argument("--model", choices=MODEL_NAMES, required=name != "all")
         if name != "final":
-            p.add_argument("--n-trials", type=int, default=None, help="total trials (default: 50 housing, 30 kc)")
+            p.add_argument("--n-trials", type=int, default=None, help="total trials (default: 50 housing / 30 kc; MLP: its 5 configs)")
             p.add_argument("--timeout", type=float, default=None, help="seconds")
 
     p = sub.add_parser("ablation")
@@ -60,11 +61,13 @@ def main() -> None:
             make_splits(ds, overwrite=args.overwrite)
     elif args.cmd in ("tune", "final", "all"):
         from src.final import run_final
+        from src.models import get_model_module
         from src.tune import tune
         models = [args.model] if args.model else list(MODEL_NAMES)
         for model in models:
             if args.cmd in ("tune", "all"):
-                tune(args.dataset, model, args.n_trials or DEFAULT_N_TRIALS[args.dataset], device, args.timeout)
+                n_trials = args.n_trials or get_model_module(model).n_trials(args.dataset)
+                tune(args.dataset, model, n_trials, device, args.timeout)
             if args.cmd in ("final", "all"):
                 run_final(args.dataset, model, device)
     elif args.cmd == "ablation":

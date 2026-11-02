@@ -2,18 +2,19 @@
 during CV, the 85% fit part of the train set for the final model), then transform everything else."""
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import OrdinalEncoder, QuantileTransformer, StandardScaler
+from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder, QuantileTransformer, StandardScaler
 
 from .config import SEED_DATA
 from .data import FeatureSpec
 
-KINDS = ("numcat", "tabnet")
+KINDS = ("numcat", "tabnet", "onehot")
 LOG_PRICE_MAX = 23.0  # exp(23) ~ 1e10: guards expm1 against overflow from a diverged model
 
 
 class TabularPreprocessor:
     """kind="numcat": (x_num float32, x_cat int64 | None) for FT-Transformer.
-    kind="tabnet": one float32 matrix [numeric | categorical index] plus cat_idxs / cat_dims."""
+    kind="tabnet": one float32 matrix [numeric | categorical index] plus cat_idxs / cat_dims.
+    kind="onehot": one float32 matrix [numeric | one-hot categoricals] for the MLP (no embedding layer)."""
 
     def __init__(self, spec: FeatureSpec, kind: str, scaler: str = "quantile"):
         if kind not in KINDS:
@@ -33,7 +34,12 @@ class TabularPreprocessor:
             self.cont_scaler_.fit(X[s.cont].to_numpy(dtype=np.float64))
         if s.ord:
             self.ord_scaler_ = StandardScaler().fit(X[s.ord].to_numpy(dtype=np.float64))
-        if s.cat:
+        if s.cat and self.kind == "onehot":
+            # categories never seen during fit become an all-zero block
+            self.cat_encoder_ = OneHotEncoder(handle_unknown="ignore", sparse_output=False, dtype=np.float32)
+            self.cat_encoder_.fit(X[s.cat].astype(str))
+            self.cat_cardinalities_ = [len(c) for c in self.cat_encoder_.categories_]
+        elif s.cat:
             self.cat_encoder_ = OrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=-1)
             self.cat_encoder_.fit(X[s.cat].astype(str))
             # index 0 is reserved for categories never seen during fit
@@ -55,6 +61,8 @@ class TabularPreprocessor:
     def transform_cat(self, X: pd.DataFrame) -> np.ndarray | None:
         if not self.spec.cat:
             return None
+        if self.kind == "onehot":
+            return self.cat_encoder_.transform(X[self.spec.cat].astype(str))
         return (self.cat_encoder_.transform(X[self.spec.cat].astype(str)) + 1).astype(np.int64)
 
     def transform(self, X: pd.DataFrame):
@@ -70,6 +78,8 @@ class TabularPreprocessor:
     @property
     def feature_names(self) -> list[str]:
         """Column order of the transformed matrix (and token order of FT-Transformer after [CLS])."""
+        if self.kind == "onehot" and self.spec.cat:
+            return self.spec.num + list(self.cat_encoder_.get_feature_names_out(self.spec.cat))
         return self.spec.num + self.spec.cat
 
     @property
@@ -119,8 +129,13 @@ def preprocessing_markdown(dataset: str, model_name: str, spec: FeatureSpec, sca
         ],
     }[dataset]
     scaler_name = "QuantileTransformer(output_distribution='normal')" if scaler == "quantile" else "StandardScaler"
-    cat_note = ("index nguyên → embedding trong FT-Transformer" if model_name == "ft_transformer"
-                else "index nguyên → embedding của TabNet (`cat_idxs`, `cat_dims`)")
+    scaler_note = ("StandardScaler cố định như code MLP gốc" if model_name == "mlp"
+                   else "Cột liên tục, lệch phải; scaler chọn bằng CV")
+    cat_step, cat_note = {
+        "ft_transformer": ("OrdinalEncoder (+1, index 0 = giá trị lạ)", "index nguyên → embedding trong FT-Transformer"),
+        "tabnet": ("OrdinalEncoder (+1, index 0 = giá trị lạ)", "index nguyên → embedding của TabNet (`cat_idxs`, `cat_dims`)"),
+        "mlp": ("OneHotEncoder (giá trị lạ → toàn 0)", "MLP không có lớp embedding, như code MLP gốc"),
+    }[model_name]
     lines = [
         f"# Preprocessing — {dataset} / {model_name}",
         "",
@@ -131,10 +146,10 @@ def preprocessing_markdown(dataset: str, model_name: str, spec: FeatureSpec, sca
         "",
         "| Bước | Cột | Fit trên | Lý do |",
         "|---|---|---|---|",
-        f"| {scaler_name} | {', '.join(spec.cont)} | inner_train / phần fit 85% | Cột liên tục, lệch phải; scaler chọn bằng CV |",
+        f"| {scaler_name} | {', '.join(spec.cont)} | inner_train / phần fit 85% | {scaler_note} |",
         f"| StandardScaler | {', '.join(spec.ord)} | inner_train / phần fit 85% | Cột thứ tự, ít giá trị |",
         f"| Giữ nguyên 0/1 | {', '.join(spec.bin)} | — | Cờ nhị phân |",
-        f"| OrdinalEncoder (+1, index 0 = giá trị lạ) | {', '.join(spec.cat)} | inner_train / phần fit 85% | {cat_note} |",
+        f"| {cat_step} | {', '.join(spec.cat)} | inner_train / phần fit 85% | {cat_note} |",
         ("| Target: `log1p(price)` rồi chuẩn hoá (μ, σ) | price | inner_train / phần fit 85% | Giá lệch phải; dự đoán được đổi về giá gốc bằng `expm1` trước khi tính metric |"
          if target_log else
          "| Target: chuẩn hoá (μ, σ) trên giá gốc | price | inner_train / phần fit 85% | Ablation không dùng log |"),
