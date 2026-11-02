@@ -1,4 +1,5 @@
-"""Preprocessing ablation with each model's default hyperparameters, scored by 5-fold CV."""
+"""Preprocessing ablation with each model's default hyperparameters (MLP: its first configuration), scored by
+5-fold CV. The default scaler is Quantile for FT-Transformer / TabNet and Standard for the MLP."""
 import pandas as pd
 
 from src import plots
@@ -7,9 +8,9 @@ from src.cv import run_cv
 from src.models import get_model_module
 from src.utils import figures_dir
 
-# name -> overrides of the baseline (log1p target, quantile scaler, feature engineering on)
+# name -> overrides of the baseline (log1p target, the model's default scaler, feature engineering on)
 VARIANTS = {
-    "Baseline (log1p, Quantile, có FE)": {},
+    "Baseline (log1p, scaler mặc định, có FE)": {},
     "Target thô (không log)": {"target_log": False},
     "StandardScaler": {"scaler": "standard"},
     "Không feature engineering": {"use_fe": False},
@@ -24,6 +25,8 @@ def run_ablation(dataset: str, models: list[str], device: str) -> pd.DataFrame:
         base = get_model_module(model_name).default_params(dataset)
         for variant, v in VARIANTS.items():
             if not df.empty and ((df["model"] == model_name) & (df["variant"] == variant)).any():
+                continue
+            if v == {"scaler": base["scaler"]}:  # same as the baseline (the MLP already uses StandardScaler)
                 continue
             params = {**base, "scaler": v.get("scaler", base["scaler"])}
             print(f"[ablation] {dataset}/{model_name}: {variant}", flush=True)

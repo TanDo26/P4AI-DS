@@ -1,9 +1,6 @@
 # Nhóm DL — FT-Transformer, TabNet & MLP cho dự đoán giá nhà
 
-3 model DL trên Housing (545 dòng) và King County (21.613 dòng), cùng split/fold với nhóm ML để so sánh công bằng:
-
-- FT-Transformer và TabNet, trong [`dl/`](dl/): hiện thực [`implement_plan.md`](implement_plan.md).
-- MLP, trong [`dl_mlp_project/`](dl_mlp_project/): xem mục [MLP](#mlp-dl_mlp_project).
+3 model DL trên Housing (545 dòng) và King County (21.613 dòng), cùng split/fold với nhóm ML để so sánh công bằng. Toàn bộ code nằm trong [`dl/`](dl/); FT-Transformer và TabNet hiện thực [`implement_plan.md`](implement_plan.md), MLP lấy từ code MLP gốc của nhóm (xem mục [MLP](#mlp)).
 
 ## Cài đặt
 
@@ -18,120 +15,94 @@ pip install -r requirements.txt
 python -c "import torch; print(torch.cuda.is_available(), torch.cuda.get_device_name(0) if torch.cuda.is_available() else '')"
 ```
 
-Nếu `nvidia-smi` báo `CUDA Version` ≥ 13.0, có thể dùng `cu130` thay cho `cu126`. Có GPU thì chạy King County ngay tại máy với `--device cuda`, không cần Kaggle.
+Nếu `nvidia-smi` báo `CUDA Version` ≥ 13.0, có thể dùng `cu130` thay cho `cu126`.
 
-Hai file CSV gốc (`Housing.csv`, `kc_house_data.csv`) mặc định nằm ở thư mục cha của `dl/`. Nếu để chỗ khác, đặt biến môi trường `HOUSE_DATA_DIR`. Env `house-dl` đã đủ thư viện cho cả MLP, không cần cài thêm.
+Hai file CSV gốc (`Housing.csv`, `kc_house_data.csv`) mặc định nằm ở thư mục cha của `dl/`. Nếu để chỗ khác, đặt biến môi trường `HOUSE_DATA_DIR`.
 
-## Chạy toàn bộ từ đầu đến cuối
+## Chạy toàn bộ: `run_all.py`
 
-Chạy lần lượt các bước dưới đây, tất cả trong env `house-dl`. Kết quả cuối cùng là bảng so sánh 3 model × 2 dataset ở `dl/results/summary.md`.
-
-`tune` lưu tiến độ vào `results/<dataset>/<model>/optuna.db`. Nếu bị ngắt giữa chừng, chạy lại đúng lệnh đó để làm tiếp. Muốn tune lại từ đầu thì xoá file `optuna.db` đó trước khi chạy.
-
-### Bước 0 — Kiểm tra (từ `dl/`)
+Một lệnh chạy hết mọi thứ, từ thư mục `dl/`:
 
 ```bash
-conda activate house-dl
-cd dl
-python run.py splits                          # splits/ đã có thì giữ nguyên, không tạo lại
-python -m pytest -q tests -k "not pipeline"   # ~15 giây
+python run_all.py --device cuda
 ```
 
-### Bước 1 — FT-Transformer và TabNet trên Housing (CPU là đủ)
+Các bước, theo thứ tự:
+
+1. Tạo split. File split đã có thì giữ nguyên, không tạo lại.
+2. Chạy các test nhanh (~15 giây). Nếu fail thì dừng luôn, không train.
+3. Với từng dataset (Housing rồi King County) và từng model (FT-Transformer, TabNet, MLP): tune, rồi train model cuối và đánh giá test.
+4. Ablation preprocessing trên 2 dataset.
+5. Learning curve theo số dòng train (size-curve) trên King County.
+6. `summary`: bảng so sánh ở `results/summary.md`.
+
+Mỗi bước in giờ bắt đầu, nên xem log là biết bước nào tốn bao lâu.
+
+**Chạy lại sau khi bị ngắt:** chạy lại đúng lệnh đó, các phần đã xong sẽ không bị làm lại.
+- `tune` chạy tiếp từ `results/<dataset>/<model>/optuna.db`. Trial bị ngắt giữa chừng sẽ được chạy lại, kể cả trial cấu hình mặc định và 5 cấu hình của MLP.
+- Model cuối bị bỏ qua nếu `test_metrics.json` đã khớp với hyperparams tốt nhất. Dùng `--force` để ép train lại.
+- Ablation và size-curve chỉ chạy những dòng còn thiếu trong file CSV kết quả.
+
+Muốn tune lại một model từ đầu thì xoá `results/<dataset>/<model>/optuna.db` trước khi chạy.
+
+| Tuỳ chọn | Ý nghĩa |
+|---|---|
+| `--device auto\|cpu\|cuda` | Mặc định `auto`: có GPU thì dùng GPU |
+| `--threads N` | Số luồng CPU của torch. Chỉ dùng khi chạy CPU (`--threads 1` là nhanh nhất) |
+| `--datasets housing kc` | Chỉ chạy các dataset được liệt kê |
+| `--models ft_transformer tabnet mlp` | Chỉ chạy các model được liệt kê |
+| `--force` | Train lại model cuối kể cả khi đã khớp |
+| `--skip-tests` | Bỏ bước test nhanh |
+| `--ml-results ml.csv` | Thêm cột chênh lệch so với model ML tốt nhất vào bảng tổng hợp |
+
+Ví dụ:
 
 ```bash
-python run.py --threads 1 tune  --dataset housing --model ft_transformer --n-trials 50
-python run.py --threads 1 final --dataset housing --model ft_transformer
-python run.py --threads 1 tune  --dataset housing --model tabnet --n-trials 50
-python run.py --threads 1 final --dataset housing --model tabnet
-python run.py --threads 1 ablation --dataset housing
+python run_all.py --device cpu --threads 1 --datasets housing   # chỉ Housing, trên CPU
+python run_all.py --device cuda --datasets kc --models mlp      # chỉ MLP trên King County
 ```
 
-Thời gian đo trên i5-1135G7: tune FT-Transformer khoảng 1 giờ, TabNet khoảng 50 phút. Có thể mở 2 terminal để chạy 2 model song song.
+**Thời gian (ước tính, RTX 4060 + i5-12400F):** khoảng 4–11 giờ cho King County. Phần lớn là tune FT-Transformer (30 trial) và TabNet (30 trial). MLP chỉ có 5 cấu hình nên nhanh. Trên CPU (i5-1135G7), tune Housing mất khoảng 1 giờ cho FT-Transformer và 50 phút cho TabNet. King County trên CPU mất hàng giờ cho một trial, nên cần GPU.
 
-### Bước 2 — FT-Transformer và TabNet trên King County (cần GPU)
-
-**Cách A: máy có GPU NVIDIA** (vd. RTX 4060, đã cài torch bản `cu126` như ở mục Cài đặt), chạy từ `dl/`:
-
-```bash
-python run.py --device cuda tune  --dataset kc --model ft_transformer --n-trials 30
-python run.py --device cuda final --dataset kc --model ft_transformer
-python run.py --device cuda tune  --dataset kc --model tabnet --n-trials 30
-python run.py --device cuda final --dataset kc --model tabnet
-python run.py --device cuda size-curve          # cần best_params.json của cả 2 model trên kc
-python run.py --device cuda ablation --dataset kc
-```
-
-**Cách B: Kaggle** (GPU miễn phí). Notebook [`dl/notebooks/kaggle_kc_gpu.ipynb`](dl/notebooks/kaggle_kc_gpu.ipynb) chạy đúng các lệnh trên:
-
+**Không có GPU:** dùng Kaggle với notebook [`dl/notebooks/kaggle_kc_gpu.ipynb`](dl/notebooks/kaggle_kc_gpu.ipynb).
 1. Nén toàn bộ thư mục `dl/` (gồm `splits/` và `results/`) thành `dl.zip`, rồi tạo Kaggle Dataset tên `house-dl-code` từ file đó.
-2. Mở notebook, làm theo phần *Chuẩn bị* trong đó. Một session Kaggle tối đa 12 giờ, nên FT-Transformer và TabNet chạy ở 2 session riêng.
-3. Mỗi session cho ra một file `dl_results_kc.zip`. Tải về và giải nén vào `dl/`.
+2. Làm theo phần *Chuẩn bị* trong notebook. Một session Kaggle tối đa 12 giờ, nên notebook chia làm 2 session.
+3. Mỗi session cho ra một file `dl_results_kc.zip`. Tải về, giải nén vào `dl/`, rồi chạy `python run.py summary`.
 
-### Bước 3 — MLP trên cả 2 dataset (từ `dl_mlp_project/`)
-
-```bash
-cd ../dl_mlp_project
-python check_datasets.py      # kiểm tra 2 CSV ở thư mục gốc
-python smoke_test.py          # phải in "SMOKE TEST PASSED"; điểm số ở bước này là dữ liệu giả, không dùng
-python dl_mlp_experiment.py --housing_csv ../Housing.csv --king_county_csv ../kc_house_data.csv --output_dir results_mlp
-```
-
-- Lệnh cuối chạy cả 2 dataset, mỗi dataset 5 cấu hình × 5 fold, rồi train model cuối và đánh giá test.
-- Script tự dùng GPU nếu có; thêm `--cpu` để ép chạy CPU.
-- Giữ nguyên `--output_dir results_mlp`, vì bước tổng hợp đọc từ `dl_mlp_project/results_mlp/`.
-
-### Bước 4 — Tổng hợp 3 model (từ `dl/`)
-
-```bash
-cd ../dl
-python run.py summary                         # thêm --ml-results ml.csv khi nhóm ML gửi kết quả
-```
-
-Kết quả nằm ở:
-- `results/summary.md`: bảng metric và bảng phân tích sai số.
-- `results/summary.csv`.
-- `figures/summary/*.png`: hình so sánh CV và hình thời gian train vs RMSE.
-
-Nếu log có dòng `skip MLP ...` nghĩa là kết quả MLP được chạy bằng code cũ (seed CV 36), phải chạy lại Bước 3.
-
-Không cần train lại khi chỉ muốn vẽ lại hình: dùng `python run.py replot` rồi `python run.py summary`.
-
-## Các lệnh của `dl/run.py` (chạy từ thư mục `dl/`)
+## Các lệnh lẻ của `dl/run.py` (chạy từ thư mục `dl/`)
 
 | Lệnh | Việc |
 |---|---|
 | `python run.py splits` | Tạo split 80/20, 5 fold, tập con cho learning curve (chạy 1 lần; giữ nguyên nếu đã có) |
-| `python run.py tune --dataset housing --model ft_transformer --n-trials 50` | Optuna 5-fold CV; trial 0 là cấu hình mặc định; chạy tiếp được nếu bị ngắt |
-| `python run.py final --dataset housing --model ft_transformer` | Train lại trên 85% train (early stopping trên 15% còn lại), giải thích model trên 15% đó, đánh giá test **1 lần**, vẽ hình |
-| `python run.py all --dataset housing` | `tune` + `final` cho cả 2 model |
+| `python run.py tune --dataset housing --model ft_transformer` | Optuna 5-fold CV (mặc định 50 trial Housing / 30 trial King County; MLP: 5 cấu hình cố định); chạy tiếp được nếu bị ngắt |
+| `python run.py final --dataset housing --model mlp` | Train lại trên 85% train (early stopping trên 15% còn lại), giải thích model trên 15% đó, đánh giá test **1 lần**, vẽ hình |
+| `python run.py all --dataset housing` | `tune` + `final` cho cả 3 model |
 | `python run.py ablation --dataset housing` | Ablation preprocessing (cấu hình mặc định, CV) |
 | `python run.py size-curve` | Learning curve theo số dòng train trên King County |
-| `python run.py summary [--ml-results ml.csv]` | Bảng tổng hợp + hình so sánh + phân tích sai số trên test cho FT-Transformer, TabNet và MLP (nếu đã có `dl_mlp_project/results_mlp/`); thêm kết quả nhóm ML để tính gap |
+| `python run.py summary [--ml-results ml.csv]` | Bảng tổng hợp + hình so sánh + phân tích sai số trên test; thêm kết quả nhóm ML để tính gap |
 | `python run.py replot` | Vẽ lại hình của từng model từ kết quả đã lưu (không train lại) |
 
 Tuỳ chọn chung: `--device auto|cpu|cuda`, `--threads N`.
 Trên CPU nên dùng `--threads 1` và chạy nhiều job song song: với model nhỏ, thêm luồng làm **chậm** đi (đo được: FT-Transformer trên Housing 0,54 s/epoch với 1 luồng, 1,2 s/epoch với 8 luồng).
 
-**King County cần GPU.** Trên CPU, FT-Transformer mất ~46 s/epoch và TabNet ~6 s/epoch, tức hàng giờ cho một trial (xem Bước 2 ở trên).
-
 ## Cấu trúc
 
 ```
 dl/
-├── run.py                     # CLI
+├── run.py                     # CLI từng bước
+├── run_all.py                 # chạy toàn bộ từ đầu đến cuối
 ├── src/
 │   ├── config.py              # đường dẫn, SEED_DATA=42, SEED_MODEL=36
-│   ├── data.py                # đọc CSV + feature engineering stateless
+│   ├── data.py                # đọc CSV + feature engineering stateless (dùng chung cho 3 model)
 │   ├── splits.py              # split / fold / inner split / tập con learning curve
-│   ├── preprocess.py          # TabularPreprocessor, TargetTransformer (stateful) + preprocessing.md
+│   ├── preprocess.py          # TabularPreprocessor (numcat / tabnet / onehot), TargetTransformer + preprocessing.md
 │   ├── metrics.py             # MAE, RMSE, R², NRMSE, bootstrap CI
 │   ├── cv.py                  # 5-fold CV với inner_val cho early stopping
 │   ├── tune.py                # Optuna (TPE seed 42, MedianPruner, SQLite để resume)
 │   ├── final.py               # model cuối + test (module DUY NHẤT đọc test split)
 │   ├── explain.py             # permutation importance, attention [CLS], mask TabNet
 │   ├── plots.py, summary.py
-│   └── models/                # ft_transformer.py, tabnet.py (cùng interface BaseModel)
+│   └── models/                # ft_transformer.py, tabnet.py, mlp.py (cùng interface BaseModel)
 ├── experiments/               # ablation.py, size_curve.py
 ├── tests/                     # test_no_leakage.py, test_smoke.py, test_pipeline.py
 ├── notebooks/kaggle_kc_gpu.ipynb
@@ -142,6 +113,8 @@ dl/
 
 ## Kết quả của mỗi model × dataset (`results/<dataset>/<model>/`)
 
+Cả 3 model ghi cùng một bộ file:
+
 | File | Nội dung |
 |---|---|
 | `best_params.json` | Hyperparams tốt nhất, CV mean ± std, thông tin Optuna, seed, version thư viện, phần cứng |
@@ -151,7 +124,7 @@ dl/
 | `final_history.json` | Train loss và val RMSE từng epoch của model cuối |
 | `predictions_test.csv` | `row, y_true, y_pred` |
 | `preprocessing.md` | Các bước preprocessing, fit trên tập nào, lý do |
-| `feature_importance_*.csv` | Permutation importance; attention (FT-Transformer) hoặc mask (TabNet). Tất cả tính trên 15% validation của model cuối, cùng các dòng với MLP |
+| `feature_importance_*.csv` | Permutation importance (cả 3 model); attention (FT-Transformer); mask (TabNet). Tất cả tính trên 15% validation của model cuối |
 | `figures/` | learning curve, Optuna history / param importance, dự đoán vs thực tế, residual, importance, mask TabNet |
 
 Tổng hợp: `results/summary.csv`, `results/summary.md`, `figures/summary/*.png`, `results/<dataset>/ablation.csv`, `results/kc/size_curve.csv`.
@@ -165,10 +138,36 @@ split 80/20 (seed 42) → train | test (khoá)
 train → KFold(5, shuffle, seed 42); mỗi fold: fold_train → inner_train | inner_val (15%, seed 42)
    fit scaler / encoder / target scaler trên inner_train → train (seed 36), early stopping trên inner_val
    → dự đoán fold_val → expm1 về giá gốc → MAE / RMSE / R²
-Optuna: chọn theo mean CV RMSE (giá gốc)
+Tuning: chọn theo mean CV RMSE (giá gốc) — Optuna cho FT-Transformer / TabNet, 5 cấu hình cố định cho MLP
 Final: train → fit (85%) | val (15%, seed 42); fit preprocessing trên fit, early stopping trên val
    → giải thích model trên val → test đúng 1 lần
 ```
+
+## MLP
+
+MLP lấy từ code MLP gốc của nhóm ([`Focus-In-Self-Coding/P4AI-DS/dl_mlp_project`](https://github.com/Focus-In-Self-Coding/P4AI-DS/tree/d90149bcc93e8d9debfc6a03128d690f957c1d45/dl_mlp_project), commit `d90149b`), đưa vào [`dl/src/models/mlp.py`](dl/src/models/mlp.py) để chạy chung pipeline, chung định dạng kết quả với 2 model kia.
+
+**Giữ nguyên từ bản gốc:**
+- Kiến trúc: các lớp Linear → ReLU → Dropout, đầu ra 1 giá trị.
+- Cách train: AdamW, loss MSE, ReduceLROnPlateau (factor 0,5, patience 7, lr tối thiểu 1e-5), gradient clipping 5,0, early stopping với patience 22 và tối đa 200 epoch.
+- Seed model 36.
+- Tuning là 5 cấu hình cố định, mỗi cấu hình chạy đúng 1 lần, chọn theo mean CV RMSE:
+
+| Cấu hình | Hidden layers | Dropout | Learning rate | Weight decay | Batch |
+|---|---|---|---|---|---|
+| `mlp_64_32_d0_lr1e-3_wd1e-4_b32` | 64, 32 | 0,0 | 1e-3 | 1e-4 | 32 |
+| `mlp_128_64_d0.1_lr1e-3_wd1e-4_b64` | 128, 64 | 0,1 | 1e-3 | 1e-4 | 64 |
+| `mlp_128_64_32_d0.2_lr5e-4_wd1e-3_b128` | 128, 64, 32 | 0,2 | 5e-4 | 1e-3 | 128 |
+| `mlp_256_128_d0.1_lr5e-4_wd1e-4_b128` | 256, 128 | 0,1 | 5e-4 | 1e-4 | 128 |
+| `mlp_64_32_d0.2_lr1e-3_wd1e-2_b64` | 64, 32 | 0,2 | 1e-3 | 1e-2 | 64 |
+
+**Khác bản gốc (để so sánh công bằng với FT-Transformer / TabNet; cần ghi trong report):**
+- **Feature:** dùng chung feature engineering của [`dl/src/data.py`](dl/src/data.py), ví dụ log `sqft_*` / `area`, sửa `bedrooms = 33`, thêm `dist_downtown_km` và `house_age`, bỏ `sqft_above`.
+- **Mã hoá đầu vào:** cột số dùng StandardScaler như bản gốc; categorical (`zipcode`, `furnishingstatus`) dùng one-hot vì MLP không có lớp embedding.
+  - Preprocessing gốc của MLP (cột gốc) gần với biến thể "Không feature engineering" trong ablation. Vì vậy ablation cho thấy feature engineering giúp MLP bao nhiêu.
+  - Biến thể "StandardScaler" không chạy cho MLP vì baseline của MLP đã dùng StandardScaler.
+- **Split và seed:** dùng chung với 2 model kia. Seed 42 cho KFold và cho 2 lần tách 15% để early stopping; permutation importance cũng dùng seed 42 (bản gốc dùng 36 cho cả hai).
+- **Đánh giá:** model cuối, giải thích model, test, CI và phân tích sai số đi qua đúng code của 2 model kia.
 
 ## Cho nhóm ML: dùng chung split
 
@@ -184,16 +183,10 @@ folds = KFold(5, shuffle=True, random_state=42).split(train_df)
 
 Để có cột gap so với ML trong bảng tổng hợp: `python run.py summary --ml-results ml.csv`, với `ml.csv` có ít nhất các cột `dataset, model, test_rmse` (`dataset` là `housing` hoặc `kc`).
 
-## MLP (`dl_mlp_project/`)
-
-Code MLP chép từ [`Focus-In-Self-Coding/P4AI-DS/dl_mlp_project`](https://github.com/Focus-In-Self-Coding/P4AI-DS/tree/d90149bcc93e8d9debfc6a03128d690f957c1d45/dl_mlp_project) (commit `d90149b`) để sửa tiếp trong repo này. So với bản gốc, `KFold` của CV và 2 lần tách 15% để early stopping (trong mỗi fold, và cho model cuối) đổi seed từ 36 sang 42, đường dẫn CSV trỏ về thư mục gốc; cách chạy xem [`dl_mlp_project/README.md`](dl_mlp_project/README.md). MLP dùng **đúng cùng các dòng** với FT-Transformer / TabNet ở mọi bước: test, 5 fold, inner_val trong từng fold, và 15% validation của model cuối (fold `k` của MLP, đếm từ 1, là fold `k − 1` trong `folds.csv`).
-
-Sau khi chạy MLP (`--output_dir results_mlp`), `python run.py summary` tự thêm MLP vào bảng tổng hợp và hình so sánh. Metric test, 95% CI, NRMSE và phân tích sai số của MLP được tính lại từ `test_predictions.csv` bằng cùng code với 2 model kia; CV lấy từ `cv_fold_details.csv`. MLP chạy với seed CV cũ (36) sẽ bị bỏ qua kèm cảnh báo.
-
 ## Test
 
 ```bash
-python -m pytest -q tests                      # ~2 phút, gồm cả test end-to-end
+python -m pytest -q tests                      # ~3 phút, gồm cả test end-to-end
 python -m pytest -q tests -k "not pipeline"    # ~15 giây
 ```
 
@@ -205,6 +198,7 @@ python -m pytest -q tests -k "not pipeline"    # ~15 giây
 
   Với thí nghiệm chính, quy tắc này trùng với bảng trong plan (Housing / King County). Nó chỉ thực sự khác khi chạy các tập con nhỏ của King County trong learning curve.
 - **Learning curve theo kích thước:** hyperparams cố định, trừ batch size của TabNet được hạ về 64 / 16 khi tập con dưới 2.000 dòng. Batch ≥ 256 tune cho King County chỉ còn 1–2 bước/epoch trên 436 dòng.
-- **Model cuối** dùng chung protocol với MLP: train trên 85% train, early stopping trên 15% còn lại (seed 42). Permutation importance, attention và mask TabNet tính trên 15% đó, nên test chỉ dùng cho metric và phân tích sai số.
+- **Model cuối** dùng protocol của code MLP gốc cho cả 3 model: train trên 85% train, early stopping trên 15% còn lại (seed 42). Permutation importance, attention và mask TabNet tính trên 15% đó, nên test chỉ dùng cho metric và phân tích sai số.
+- **Trial cố định:** cấu hình mặc định của FT-Transformer / TabNet và 5 cấu hình MLP luôn được xếp vào hàng chờ trước các trial do Optuna sinh. Trial bị ngắt giữa chừng sẽ được xếp lại khi chạy tiếp.
 - **Ablation "không feature engineering":** với Housing là không lấy log `area`; với King County là dùng các cột gốc (chỉ bỏ `id`, `date`).
 - **Attention của FT-Transformer:** `rtdl_revisiting_models` không trả attention, nên `explain.py` dùng forward pre-hook để tính lại softmax(QKᵀ/√d) của truy vấn [CLS].

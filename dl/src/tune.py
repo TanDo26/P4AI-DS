@@ -24,15 +24,25 @@ def load_study(dataset: str, model_name: str) -> optuna.Study:
     )
 
 
+def enqueue_fixed_trials(study: optuna.Study, fixed: list[dict], limit: int) -> None:
+    """Queue (at most `limit` of) the fixed trials (default config; every MLP config) that have not run yet.
+    A trial that was interrupted (FAIL, or RUNNING left behind by a killed process) is queued again, so
+    resuming never skips one."""
+    seen = [t.system_attrs.get("fixed_params", t.params) for t in study.trials
+            if t.state in (TrialState.COMPLETE, TrialState.PRUNED, TrialState.WAITING)]
+    missing = [p for p in fixed if not any(all(s.get(k) == v for k, v in p.items()) for s in seen)]
+    for params in missing[:limit]:
+        study.enqueue_trial(params)
+
+
 def tune(dataset: str, model_name: str, n_trials: int, device: str, timeout: float | None = None) -> None:
     """Run until the study holds n_trials finished (complete + pruned) trials, then export results."""
     module = get_model_module(model_name)
     optuna.logging.set_verbosity(optuna.logging.WARNING)
     study = load_study(dataset, model_name)
-    if not study.trials:
-        study.enqueue_trial(module.default_trial_params(dataset))  # trial 0 = paper/library default config
     finished = sum(t.state in (TrialState.COMPLETE, TrialState.PRUNED) for t in study.trials)
     remaining = max(0, n_trials - finished)
+    enqueue_fixed_trials(study, module.fixed_trials(dataset), remaining)  # run first, before any sampled trial
     print(f"[tune] {dataset}/{model_name}: {finished} trials done, running {remaining} more on {device}", flush=True)
 
     def objective(trial: optuna.Trial) -> float:

@@ -8,7 +8,7 @@ import torch
 import torch.nn.functional as F
 from rtdl_revisiting_models import FTTransformer
 
-from ..config import SEED_MODEL
+from ..config import DEFAULT_N_TRIALS, SEED_MODEL
 from ..utils import set_seed
 from .base import BaseModel
 
@@ -30,11 +30,19 @@ def default_params(dataset: str) -> dict:
             "ffn_dropout": 0.1, "residual_dropout": 0.0, "lr": 1e-4, "weight_decay": 1e-5, "scaler": "quantile"}
 
 
+def n_trials(dataset: str) -> int:
+    return DEFAULT_N_TRIALS[dataset]
+
+
 def default_trial_params(dataset: str) -> dict:
-    """default_params() expressed with the Optuna parameter names (enqueued as trial 0)."""
+    """default_params() expressed with the Optuna parameter names."""
     p = default_params(dataset)
     del p["residual_dropout"]
     return {**p, "use_residual_dropout": False}
+
+
+def fixed_trials(dataset: str) -> list[dict]:
+    return [default_trial_params(dataset)]  # the paper's default config is always evaluated
 
 
 def suggest_params(trial, dataset: str) -> dict:

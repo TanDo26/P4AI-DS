@@ -1,10 +1,10 @@
-"""Model registry. Each module exposes NAME, KIND, default_params, default_trial_params,
+"""Model registry. Each module exposes NAME, KIND, n_trials, default_params, fixed_trials,
 suggest_params, adapt_to_size and build."""
 from types import ModuleType
 
-from . import ft_transformer, tabnet
+from . import ft_transformer, mlp, tabnet
 
-REGISTRY: dict[str, ModuleType] = {"ft_transformer": ft_transformer, "tabnet": tabnet}
+REGISTRY: dict[str, ModuleType] = {"ft_transformer": ft_transformer, "tabnet": tabnet, "mlp": mlp}
 
 
 def get_model_module(name: str) -> ModuleType:

@@ -7,7 +7,7 @@ import numpy as np
 import torch
 from pytorch_tabnet.tab_model import TabNetRegressor
 
-from ..config import SEED_MODEL
+from ..config import DEFAULT_N_TRIALS, SEED_MODEL
 from ..utils import set_seed
 from .base import BaseModel
 
@@ -29,8 +29,12 @@ def default_params(dataset: str) -> dict:
     return p
 
 
-def default_trial_params(dataset: str) -> dict:
-    return default_params(dataset)
+def n_trials(dataset: str) -> int:
+    return DEFAULT_N_TRIALS[dataset]
+
+
+def fixed_trials(dataset: str) -> list[dict]:
+    return [default_params(dataset)]  # the library-style default config is always evaluated
 
 
 def suggest_params(trial, dataset: str) -> dict:

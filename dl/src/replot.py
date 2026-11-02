@@ -54,7 +54,7 @@ def plot_test(dataset: str, model_name: str) -> None:
         plots.importance_bars(att, "attention", figs / "importance_attention.png",
                               f"{label} — attention [CLS] → feature, validation 15% ({dataset})",
                               "Attention trung bình (tổng = 1)", color)
-    else:
+    elif model_name == "tabnet":
         imp = pd.read_csv(out / "feature_importance_tabnet.csv")
         plots.importance_bars(imp, "importance_val", figs / "importance_tabnet.png",
                               f"{label} — feature importance từ mask, validation 15% ({dataset})",

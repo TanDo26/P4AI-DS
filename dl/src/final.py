@@ -1,8 +1,9 @@
 """Final model: train with the tuned hyperparameters on 85% of the training set, early stopping on the
-other 15% (inner_split, seed 42 - the same protocol as the MLP), then evaluate on the test set exactly once.
+other 15% (inner_split, seed 42 - the protocol of the team's original MLP code), then evaluate on the test
+set exactly once.
 
-Explanations (permutation importance, attention, TabNet masks) use that 15% validation split, the same
-rows as the MLP's, and are computed before the test split is read. This is the only module that reads it."""
+Explanations (permutation importance for every model, plus attention / TabNet masks) use that 15% validation
+split and are computed before the test split is read. This is the only module that reads it."""
 import numpy as np
 import pandas as pd
 
@@ -49,7 +50,7 @@ def run_final(dataset: str, model_name: str, device: str) -> dict:
     if model_name == "ft_transformer":
         ft_attention_importance(model, X_val_t, pre.feature_names).to_csv(
             out / "feature_importance_attention.csv", index=False)
-    else:
+    elif model_name == "tabnet":
         imp, masks = tabnet_importance(model, X_val_t, pre.feature_names)
         imp.to_csv(out / "feature_importance_tabnet.csv", index=False)
         np.savez(out / "tabnet_masks.npz", feature_names=np.array(pre.feature_names),

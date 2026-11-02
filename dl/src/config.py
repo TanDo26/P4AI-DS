@@ -8,9 +8,6 @@ DATA_DIR = Path(os.environ.get("HOUSE_DATA_DIR", DL_DIR.parent))
 SPLITS_DIR = DL_DIR / "splits"
 RESULTS_DIR = DL_DIR / "results"
 FIGURES_DIR = DL_DIR / "figures"
-# Output of dl_mlp_project/dl_mlp_experiment.py (--output_dir results_mlp); summary.py adds the MLP from it.
-MLP_RESULTS_DIR = DL_DIR.parent / "dl_mlp_project" / "results_mlp"
-MLP_DATASET_DIRS = {"housing": "housing_prices", "kc": "king_county"}
 
 SEED_DATA = 42   # every split / resampling of data (train-test, KFold, inner_val, subsets, bootstrap)
 SEED_MODEL = 36  # randomness inside models (team rule)
@@ -21,9 +18,9 @@ INNER_VAL_SIZE = 0.15
 
 DATASETS = ("housing", "kc")
 CSV_FILES = {"housing": "Housing.csv", "kc": "kc_house_data.csv"}
-MODEL_NAMES = ("ft_transformer", "tabnet")
+MODEL_NAMES = ("ft_transformer", "tabnet", "mlp")
 
-DEFAULT_N_TRIALS = {"housing": 50, "kc": 30}
+DEFAULT_N_TRIALS = {"housing": 50, "kc": 30}  # FT-Transformer, TabNet; the MLP runs its 5-config grid
 
 # Learning curve on King County: fold-train sizes (436 = size of the Housing train set).
 SIZE_CURVE_SIZES = (436, 1000, 2500, 5000, 10000)
