@@ -1,6 +1,6 @@
-# Nhóm DL — FT-Transformer, TabNet & MLP cho dự đoán giá nhà
+# Nhóm DL — MLP, TabM, TabNet, FT-Transformer & ModernNCA cho dự đoán giá nhà
 
-3 model DL trên Housing (545 dòng) và King County (21.613 dòng), cùng split/fold với nhóm ML để so sánh công bằng. Toàn bộ code nằm trong [`dl/`](dl/); FT-Transformer và TabNet hiện thực [`implement_plan.md`](implement_plan.md), MLP lấy từ code MLP gốc của nhóm (xem mục [MLP](#mlp)).
+5 model DL trên Housing (545 dòng) và King County (21.613 dòng), cùng split/fold với nhóm ML để so sánh công bằng. Toàn bộ code nằm trong [`dl/`](dl/); FT-Transformer và TabNet hiện thực [`implement_plan.md`](implement_plan.md), MLP lấy từ code MLP gốc của nhóm (xem mục [MLP](#mlp)), TabM và ModernNCA là 2 model năm 2025 (xem mục [TabM](#tabm) và [ModernNCA](#modernnca)). Cả 5 model được tune bằng Optuna với cùng số trial.
 
 ## Cài đặt
 
@@ -31,7 +31,7 @@ Các bước, theo thứ tự:
 
 1. Tạo split. File split đã có thì giữ nguyên, không tạo lại.
 2. Chạy các test nhanh (~15 giây). Nếu fail thì dừng luôn, không train.
-3. Với từng dataset (Housing rồi King County) và từng model (FT-Transformer, TabNet, MLP): tune, rồi train model cuối và đánh giá test.
+3. Với từng dataset (Housing rồi King County) và từng model (FT-Transformer, TabNet, MLP, TabM, ModernNCA): tune, rồi train model cuối và đánh giá test.
 4. Ablation preprocessing trên 2 dataset.
 5. Learning curve theo số dòng train (size-curve) trên King County.
 6. `summary`: bảng so sánh ở `results/summary.md`.
@@ -39,7 +39,7 @@ Các bước, theo thứ tự:
 Mỗi bước in giờ bắt đầu, nên xem log là biết bước nào tốn bao lâu.
 
 **Chạy lại sau khi bị ngắt:** chạy lại đúng lệnh đó, các phần đã xong sẽ không bị làm lại.
-- `tune` chạy tiếp từ `results/<dataset>/<model>/optuna.db`. Trial bị ngắt giữa chừng sẽ được chạy lại, kể cả trial cấu hình mặc định và 5 cấu hình của MLP.
+- `tune` chạy tiếp từ `results/<dataset>/<model>/optuna.db`. Trial bị ngắt giữa chừng sẽ được chạy lại, kể cả trial cấu hình mặc định và 5 cấu hình gốc của MLP.
 - Model cuối bị bỏ qua nếu `test_metrics.json` đã khớp với hyperparams tốt nhất. Dùng `--force` để ép train lại.
 - Ablation và size-curve chỉ chạy những dòng còn thiếu trong file CSV kết quả.
 
@@ -50,7 +50,7 @@ Muốn tune lại một model từ đầu thì xoá `results/<dataset>/<model>/o
 | `--device auto\|cpu\|cuda` | Mặc định `auto`: có GPU thì dùng GPU |
 | `--threads N` | Số luồng CPU của torch. Chỉ dùng khi chạy CPU (`--threads 1` là nhanh nhất) |
 | `--datasets housing kc` | Chỉ chạy các dataset được liệt kê |
-| `--models ft_transformer tabnet mlp` | Chỉ chạy các model được liệt kê |
+| `--models ft_transformer tabnet mlp tabm modernnca` | Chỉ chạy các model được liệt kê |
 | `--force` | Train lại model cuối kể cả khi đã khớp |
 | `--skip-tests` | Bỏ bước test nhanh |
 | `--ml-results ml.csv` | Thêm cột chênh lệch so với model ML tốt nhất vào bảng tổng hợp |
@@ -59,10 +59,10 @@ Ví dụ:
 
 ```bash
 python run_all.py --device cpu --threads 1 --datasets housing   # chỉ Housing, trên CPU
-python run_all.py --device cuda --datasets kc --models mlp      # chỉ MLP trên King County
+python run_all.py --device cuda --datasets kc --models tabm     # chỉ TabM trên King County
 ```
 
-**Thời gian (ước tính, RTX 4060 + i5-12400F):** khoảng 4–11 giờ cho King County. Phần lớn là tune FT-Transformer (30 trial) và TabNet (30 trial). MLP chỉ có 5 cấu hình nên nhanh. Trên CPU (i5-1135G7), tune Housing mất khoảng 1 giờ cho FT-Transformer và 50 phút cho TabNet. King County trên CPU mất hàng giờ cho một trial, nên cần GPU.
+**Thời gian (RTX 4060 + i5-12400F):** tune King County đo được khoảng 2,4 giờ cho FT-Transformer và 4,8 giờ cho TabNet (30 trial mỗi model). MLP, TabM và ModernNCA ước tính 0,5–3 giờ mỗi model, chưa đo. Khi FT-Transformer và TabNet đã xong, phần còn lại (3 model kia trên 2 dataset, ablation, size-curve) mất khoảng 7–12 giờ, nên chạy qua đêm. Trên CPU (i5-1135G7), tune Housing mất khoảng 1 giờ cho FT-Transformer và 50 phút cho TabNet. King County trên CPU mất hàng giờ cho một trial, nên cần GPU.
 
 **Không có GPU:** dùng Kaggle với notebook [`dl/notebooks/kaggle_kc_gpu.ipynb`](dl/notebooks/kaggle_kc_gpu.ipynb).
 1. Nén toàn bộ thư mục `dl/` (gồm `splits/` và `results/`) thành `dl.zip`, rồi tạo Kaggle Dataset tên `house-dl-code` từ file đó.
@@ -74,9 +74,9 @@ python run_all.py --device cuda --datasets kc --models mlp      # chỉ MLP trê
 | Lệnh | Việc |
 |---|---|
 | `python run.py splits` | Tạo split 80/20, 5 fold, tập con cho learning curve (chạy 1 lần; giữ nguyên nếu đã có) |
-| `python run.py tune --dataset housing --model ft_transformer` | Optuna 5-fold CV (mặc định 50 trial Housing / 30 trial King County; MLP: 5 cấu hình cố định); chạy tiếp được nếu bị ngắt |
+| `python run.py tune --dataset housing --model ft_transformer` | Optuna 5-fold CV (mặc định 50 trial Housing / 30 trial King County, mọi model); chạy tiếp được nếu bị ngắt |
 | `python run.py final --dataset housing --model mlp` | Train lại trên 85% train (early stopping trên 15% còn lại), giải thích model trên 15% đó, đánh giá test **1 lần**, vẽ hình |
-| `python run.py all --dataset housing` | `tune` + `final` cho cả 3 model |
+| `python run.py all --dataset housing` | `tune` + `final` cho cả 5 model |
 | `python run.py ablation --dataset housing` | Ablation preprocessing (cấu hình mặc định, CV) |
 | `python run.py size-curve` | Learning curve theo số dòng train trên King County |
 | `python run.py summary [--ml-results ml.csv]` | Bảng tổng hợp + hình so sánh + phân tích sai số trên test; thêm kết quả nhóm ML để tính gap |
@@ -93,16 +93,16 @@ dl/
 ├── run_all.py                 # chạy toàn bộ từ đầu đến cuối
 ├── src/
 │   ├── config.py              # đường dẫn, SEED_DATA=42, SEED_MODEL=36
-│   ├── data.py                # đọc CSV + feature engineering stateless (dùng chung cho 3 model)
+│   ├── data.py                # đọc CSV + feature engineering stateless (dùng chung cho 5 model)
 │   ├── splits.py              # split / fold / inner split / tập con learning curve
 │   ├── preprocess.py          # TabularPreprocessor (numcat / tabnet / onehot), TargetTransformer + preprocessing.md
 │   ├── metrics.py             # MAE, RMSE, R², NRMSE, bootstrap CI
 │   ├── cv.py                  # 5-fold CV với inner_val cho early stopping
 │   ├── tune.py                # Optuna (TPE seed 42, MedianPruner, SQLite để resume)
 │   ├── final.py               # model cuối + test (module DUY NHẤT đọc test split)
-│   ├── explain.py             # permutation importance, attention [CLS], mask TabNet
+│   ├── explain.py             # permutation importance, attention [CLS], mask TabNet, láng giềng ModernNCA
 │   ├── plots.py, summary.py
-│   └── models/                # ft_transformer.py, tabnet.py, mlp.py (cùng interface BaseModel)
+│   └── models/                # ft_transformer.py, tabnet.py, mlp.py, tabm.py, modernnca.py (cùng interface BaseModel)
 ├── experiments/               # ablation.py, size_curve.py
 ├── tests/                     # test_no_leakage.py, test_smoke.py, test_pipeline.py
 ├── notebooks/kaggle_kc_gpu.ipynb
@@ -113,7 +113,7 @@ dl/
 
 ## Kết quả của mỗi model × dataset (`results/<dataset>/<model>/`)
 
-Cả 3 model ghi cùng một bộ file:
+Cả 5 model ghi cùng một bộ file:
 
 | File | Nội dung |
 |---|---|
@@ -124,7 +124,8 @@ Cả 3 model ghi cùng một bộ file:
 | `final_history.json` | Train loss và val RMSE từng epoch của model cuối |
 | `predictions_test.csv` | `row, y_true, y_pred` |
 | `preprocessing.md` | Các bước preprocessing, fit trên tập nào, lý do |
-| `feature_importance_*.csv` | Permutation importance (cả 3 model); attention (FT-Transformer); mask (TabNet). Tất cả tính trên 15% validation của model cuối |
+| `feature_importance_*.csv` | Permutation importance (cả 5 model); attention (FT-Transformer); mask (TabNet). Tất cả tính trên 15% validation của model cuối |
+| `neighbors_val.csv` | Chỉ ModernNCA: với 5 căn đầu của 15% validation, 5 căn train có trọng số lớn nhất (giá của chúng được lấy trung bình để dự đoán) |
 | `figures/` | learning curve, Optuna history / param importance, dự đoán vs thực tế, residual, importance, mask TabNet |
 
 Tổng hợp: `results/summary.csv`, `results/summary.md`, `figures/summary/*.png`, `results/<dataset>/ablation.csv`, `results/kc/size_curve.csv`.
@@ -138,7 +139,7 @@ split 80/20 (seed 42) → train | test (khoá)
 train → KFold(5, shuffle, seed 42); mỗi fold: fold_train → inner_train | inner_val (15%, seed 42)
    fit scaler / encoder / target scaler trên inner_train → train (seed 36), early stopping trên inner_val
    → dự đoán fold_val → expm1 về giá gốc → MAE / RMSE / R²
-Tuning: chọn theo mean CV RMSE (giá gốc) — Optuna cho FT-Transformer / TabNet, 5 cấu hình cố định cho MLP
+Tuning: Optuna, chọn theo mean CV RMSE (giá gốc); cấu hình mặc định (MLP: 5 cấu hình gốc) chạy trước
 Final: train → fit (85%) | val (15%, seed 42); fit preprocessing trên fit, early stopping trên val
    → giải thích model trên val → test đúng 1 lần
 ```
@@ -151,7 +152,7 @@ MLP lấy từ code MLP gốc của nhóm ([`Focus-In-Self-Coding/P4AI-DS/dl_mlp
 - Kiến trúc: các lớp Linear → ReLU → Dropout, đầu ra 1 giá trị.
 - Cách train: AdamW, loss MSE, ReduceLROnPlateau (factor 0,5, patience 7, lr tối thiểu 1e-5), gradient clipping 5,0, early stopping với patience 22 và tối đa 200 epoch.
 - Seed model 36.
-- Tuning là 5 cấu hình cố định, mỗi cấu hình chạy đúng 1 lần, chọn theo mean CV RMSE:
+- 5 cấu hình của bản gốc. Chúng giờ là 5 trial đầu tiên của Optuna (xem *Khác bản gốc*):
 
 | Cấu hình | Hidden layers | Dropout | Learning rate | Weight decay | Batch |
 |---|---|---|---|---|---|
@@ -161,13 +162,41 @@ MLP lấy từ code MLP gốc của nhóm ([`Focus-In-Self-Coding/P4AI-DS/dl_mlp
 | `mlp_256_128_d0.1_lr5e-4_wd1e-4_b128` | 256, 128 | 0,1 | 5e-4 | 1e-4 | 128 |
 | `mlp_64_32_d0.2_lr1e-3_wd1e-2_b64` | 64, 32 | 0,2 | 1e-3 | 1e-2 | 64 |
 
-**Khác bản gốc (để so sánh công bằng với FT-Transformer / TabNet; cần ghi trong report):**
+**Khác bản gốc (để so sánh công bằng với các model khác; cần ghi trong report):**
+- **Tuning bằng Optuna** với cùng số trial như các model khác (50 Housing / 30 King County), thay cho việc chỉ chạy 5 cấu hình.
+  - Không gian tìm kiếm lấy theo MLP của Gorishniy et al. (2021): độ rộng lớp đầu / các lớp giữa / lớp cuối (16–512, thang log), tối đa 4 lớp, dropout 0–0,5, learning rate 1e-5–1e-2, batch 32–256, scaler StandardScaler hoặc Quantile.
+  - Weight decay được nới tới 1e-2 (bài báo dừng ở 1e-3) để 5 cấu hình gốc nằm trong không gian. 5 cấu hình gốc luôn chạy đầu tiên.
+  - Kết quả của lần chạy chỉ có 5 cấu hình cũ được tự động chuyển sang `results/<dataset>/mlp_grid/` khi tune MLP lần đầu bằng code mới (kể cả các dòng MLP trong `results/kc/size_curve.csv`), nên vẫn dùng được trong report.
 - **Feature:** dùng chung feature engineering của [`dl/src/data.py`](dl/src/data.py), ví dụ log `sqft_*` / `area`, sửa `bedrooms = 33`, thêm `dist_downtown_km` và `house_age`, bỏ `sqft_above`.
-- **Mã hoá đầu vào:** cột số dùng StandardScaler như bản gốc; categorical (`zipcode`, `furnishingstatus`) dùng one-hot vì MLP không có lớp embedding.
+- **Mã hoá đầu vào:** cấu hình gốc dùng StandardScaler cho cột số; categorical (`zipcode`, `furnishingstatus`) dùng one-hot vì MLP không có lớp embedding.
   - Preprocessing gốc của MLP (cột gốc) gần với biến thể "Không feature engineering" trong ablation. Vì vậy ablation cho thấy feature engineering giúp MLP bao nhiêu.
   - Biến thể "StandardScaler" không chạy cho MLP vì baseline của MLP đã dùng StandardScaler.
 - **Split và seed:** dùng chung với 2 model kia. Seed 42 cho KFold và cho 2 lần tách 15% để early stopping; permutation importance cũng dùng seed 42 (bản gốc dùng 36 cho cả hai).
-- **Đánh giá:** model cuối, giải thích model, test, CI và phân tích sai số đi qua đúng code của 2 model kia.
+- **Đánh giá:** model cuối, giải thích model, test, CI và phân tích sai số đi qua đúng code của các model kia.
+
+## TabM
+
+TabM (Gorishniy et al., ICLR 2025) là **một mạng chứa ensemble k = 32 MLP dùng chung phần lớn trọng số**; dự đoán là trung bình của 32 dự đoán. Code: gói `tabm` của tác giả, trong [`dl/src/models/tabm.py`](dl/src/models/tabm.py).
+
+- **Input giống hệt MLP:** one-hot, không dùng embedding cho cột số. So sánh MLP với TabM vì thế chỉ khác ở phần ensemble.
+- **Train theo notebook ví dụ của tác giả:**
+  - AdamW, MSE tính riêng cho từng thành viên rồi lấy trung bình (không phải MSE của dự đoán trung bình).
+  - Gradient clipping 1,0, early stopping trên dự đoán trung bình.
+  - Batch 256 và patience 16; dưới 2.000 dòng train thì batch 32, patience 30, như FT-Transformer.
+- **Mặc định** (trial đầu tiên): 3 khối × 512, dropout 0,1, lr 2e-3, weight decay 3e-4, Quantile.
+- **Không gian tìm kiếm** lấy theo README của TabM (k cố định 32): số khối 1–5, độ rộng 64–1024, lr 1e-4–5e-3, weight decay 0 hoặc 1e-4–1e-1. Có thêm dropout 0–0,5 và scaler. Với Housing, thu hẹp còn 1–3 khối và độ rộng 64–512.
+
+## ModernNCA
+
+ModernNCA (Ye et al., ICLR 2025) thuộc nhánh **dự đoán dựa trên láng giềng**: giá một căn là trung bình có trọng số softmax(−khoảng cách) của giá các căn train, với khoảng cách đo trong không gian embedding học được. Code viết lại theo bản của tác giả trong LAMDA-TALENT, ở [`dl/src/models/modernnca.py`](dl/src/models/modernnca.py).
+
+- **Encoder:** cột liên tục và cột thứ tự đi qua embedding PLR-lite (`rtdl_num_embeddings`); cột 0/1 và one-hot giữ nguyên; sau đó qua Linear rồi 0–2 khối MLP. Khoảng cách Euclid, temperature 1.
+- **Lúc train** (như TALENT): mỗi batch so với một phần ngẫu nhiên (`sample_rate`) của các căn train khác cùng các căn còn lại trong batch. Nhãn của chính căn đó bị che.
+- **Lúc dự đoán:** dùng toàn bộ căn train làm candidate.
+- **Không rò rỉ:** candidate chỉ là các dòng model được train (inner_train trong CV, phần fit 85% ở model cuối), không bao giờ là dòng val hay test. File `model.pt` lưu cả tập candidate.
+- **Cách train:** AdamW, MSE, early stopping. Batch 1024 và patience 20 cho King County; batch 32 và patience 30 cho dữ liệu dưới 2.000 dòng.
+- **Mặc định và không gian tìm kiếm** lấy theo config ModernNCA của TALENT. Với Housing, thu hẹp `dim` / `d_block` còn tối đa 512.
+- **Giải thích riêng:** `neighbors_val.csv` liệt kê các căn train mà model dựa vào để dự đoán một căn validation.
 
 ## Cho nhóm ML: dùng chung split
 
@@ -186,8 +215,8 @@ folds = KFold(5, shuffle=True, random_state=42).split(train_df)
 ## Test
 
 ```bash
-python -m pytest -q tests                      # ~3 phút, gồm cả test end-to-end
-python -m pytest -q tests -k "not pipeline"    # ~15 giây
+python -m pytest -q tests                      # ~3–4 phút, gồm cả test end-to-end
+python -m pytest -q tests -k "not pipeline"    # ~20 giây
 ```
 
 ## Những điểm cụ thể hoá so với plan
@@ -198,7 +227,8 @@ python -m pytest -q tests -k "not pipeline"    # ~15 giây
 
   Với thí nghiệm chính, quy tắc này trùng với bảng trong plan (Housing / King County). Nó chỉ thực sự khác khi chạy các tập con nhỏ của King County trong learning curve.
 - **Learning curve theo kích thước:** hyperparams cố định, trừ batch size của TabNet được hạ về 64 / 16 khi tập con dưới 2.000 dòng. Batch ≥ 256 tune cho King County chỉ còn 1–2 bước/epoch trên 436 dòng.
-- **Model cuối** dùng protocol của code MLP gốc cho cả 3 model: train trên 85% train, early stopping trên 15% còn lại (seed 42). Permutation importance, attention và mask TabNet tính trên 15% đó, nên test chỉ dùng cho metric và phân tích sai số.
-- **Trial cố định:** cấu hình mặc định của FT-Transformer / TabNet và 5 cấu hình MLP luôn được xếp vào hàng chờ trước các trial do Optuna sinh. Trial bị ngắt giữa chừng sẽ được xếp lại khi chạy tiếp.
+- **Model cuối** dùng protocol của code MLP gốc cho cả 5 model: train trên 85% train, early stopping trên 15% còn lại (seed 42). Permutation importance, attention, mask TabNet và láng giềng ModernNCA tính trên 15% đó, nên test chỉ dùng cho metric và phân tích sai số.
+- **Trial cố định:** cấu hình mặc định của FT-Transformer / TabNet / TabM / ModernNCA và 5 cấu hình gốc của MLP luôn được xếp vào hàng chờ trước các trial do Optuna sinh. Trial bị ngắt giữa chừng sẽ được xếp lại khi chạy tiếp.
+- **Size-curve** ghi thêm cột `params_hash`. Các dòng tính với hyperparams khác hyperparams tốt nhất hiện tại sẽ tự bị tính lại.
 - **Ablation "không feature engineering":** với Housing là không lấy log `area`; với King County là dùng các cột gốc (chỉ bỏ `id`, `date`).
 - **Attention của FT-Transformer:** `rtdl_revisiting_models` không trả attention, nên `explain.py` dùng forward pre-hook để tính lại softmax(QKᵀ/√d) của truy vấn [CLS].

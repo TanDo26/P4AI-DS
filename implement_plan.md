@@ -4,6 +4,8 @@
 > Tài liệu này mô tả cách hiện thực 2 model DL (không thuộc họ MLP) sao cho kết quả **so sánh công bằng được** với nhóm ML.
 >
 > MLP (từ code MLP gốc của nhóm) cũng chạy trong pipeline này, với cùng split, cùng feature engineering và cùng cách đánh giá; chi tiết ở mục *MLP* trong [`README.md`](README.md).
+>
+> Sau đó nhóm thêm 2 model năm 2025: **TabM** (ensemble MLP dùng chung trọng số, để so sánh với MLP) và **ModernNCA** (nhánh dự đoán dựa trên láng giềng). Hai model này cũng chạy chung pipeline, và từ lúc này cả 5 model đều được tune bằng Optuna với cùng số trial; chi tiết ở các mục *TabM* và *ModernNCA* trong [`README.md`](README.md).
 
 | Mục | Nội dung |
 |---|---|

@@ -18,9 +18,9 @@ INNER_VAL_SIZE = 0.15
 
 DATASETS = ("housing", "kc")
 CSV_FILES = {"housing": "Housing.csv", "kc": "kc_house_data.csv"}
-MODEL_NAMES = ("ft_transformer", "tabnet", "mlp")
+MODEL_NAMES = ("ft_transformer", "tabnet", "mlp", "tabm", "modernnca")
 
-DEFAULT_N_TRIALS = {"housing": 50, "kc": 30}  # FT-Transformer, TabNet; the MLP runs its 5-config grid
+DEFAULT_N_TRIALS = {"housing": 50, "kc": 30}  # Optuna trials per model (same budget for every model)
 
 # Learning curve on King County: fold-train sizes (436 = size of the Housing train set).
 SIZE_CURVE_SIZES = (436, 1000, 2500, 5000, 10000)

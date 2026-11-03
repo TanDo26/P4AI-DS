@@ -59,8 +59,6 @@ def _markdown(df: pd.DataFrame) -> str:
         return f"{v:,.0f}"
 
     def trials(r):
-        if r["model"] == "mlp":
-            return f"{r['n_trials']} cấu hình cố định"
         if r["n_trials"] + r["n_pruned"] == 1:
             return "1 (mặc định, chưa tune)"
         return f"{r['n_trials']} + {r['n_pruned']} pruned"

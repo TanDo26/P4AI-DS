@@ -1,5 +1,8 @@
 """Learning curve on King County: CV score vs number of fold-train rows, hyperparameters fixed.
 Isolates the effect of data size from the other differences between the two datasets."""
+import hashlib
+import json
+
 import pandas as pd
 
 from src import plots
@@ -9,6 +12,10 @@ from src.models import get_model_module
 from src.utils import figures_dir, load_json
 
 DATASET = "kc"
+
+
+def params_hash(params: dict) -> str:
+    return hashlib.sha1(json.dumps(params, sort_keys=True).encode()).hexdigest()[:10]
 
 
 def run_size_curve(models: list[str], device: str, sizes: tuple[int, ...] = SIZE_CURVE_SIZES,
@@ -24,8 +31,12 @@ def run_size_curve(models: list[str], device: str, sizes: tuple[int, ...] = SIZE
         else:
             params, source = module.default_params(DATASET), "default"
             print(f"[size-curve] {model_name}: no tuned params for {DATASET}, using defaults", flush=True)
-        if not df.empty:  # rows computed with other hyperparameters (e.g. defaults before tuning) are stale
-            df = df[(df["model"] != model_name) | (df["params_source"] == source)]
+        key = params_hash(params)
+        if not df.empty:  # rows computed with other hyperparameters (defaults before tuning, an older study) are stale
+            if "params_hash" not in df:
+                df["params_hash"] = pd.NA  # rows from before this column: judged by params_source only
+            other = (df["params_source"] != source) | (df["params_hash"].notna() & (df["params_hash"] != key))
+            df = df[(df["model"] != model_name) | ~other]
         for n in list(sizes) + (["full"] if include_full else []):
             if not df.empty and ((df["model"] == model_name) & (df["n_requested"].astype(str) == str(n))).any():
                 continue  # resume: already computed
@@ -33,7 +44,7 @@ def run_size_curve(models: list[str], device: str, sizes: tuple[int, ...] = SIZE
             p = module.adapt_to_size(params, train_size or 10 ** 9)
             print(f"[size-curve] {model_name}: n = {n}", flush=True)
             res = run_cv(DATASET, model_name, p, device=device, train_size=train_size, verbose=True)
-            part = res["folds"].assign(model=model_name, n_requested=str(n), params_source=source)
+            part = res["folds"].assign(model=model_name, n_requested=str(n), params_source=source, params_hash=key)
             df = pd.concat([df, part], ignore_index=True)
             df.to_csv(out, index=False)
     plots.size_curve(df[df["model"].isin(models)], figures_dir(DATASET) / "size_curve.png",

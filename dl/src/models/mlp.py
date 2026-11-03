@@ -1,6 +1,7 @@
-"""Feed-forward MLP ported from the team's original MLP code (dl_mlp_project): the same 5 fixed
-configurations and training (ReLU + dropout, AdamW, MSE, ReduceLROnPlateau, gradient clipping, early
-stopping with patience 22), on the shared features with one-hot categoricals (KIND = "onehot")."""
+"""Feed-forward MLP ported from the team's original MLP code (dl_mlp_project): the same architecture and
+training (ReLU + dropout, AdamW, MSE, ReduceLROnPlateau, gradient clipping, early stopping with patience 22),
+on the shared features with one-hot categoricals (KIND = "onehot"). Tuned with Optuna like the other models;
+the original code's 5 configurations run first, as fixed trials."""
 import copy
 import math
 
@@ -9,7 +10,7 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 
-from ..config import SEED_MODEL
+from ..config import DEFAULT_N_TRIALS, SEED_MODEL
 from ..utils import set_seed
 from .base import BaseModel
 
@@ -20,7 +21,8 @@ PATIENCE = 22
 MIN_DELTA = 1e-6  # an epoch only counts as an improvement if inner_val MSE drops by more than this
 GRAD_CLIP = 5.0
 
-# the original grid: hidden layers, dropout, AdamW learning rate / weight decay, batch size
+# the original code's grid (hidden layers, dropout, AdamW learning rate / weight decay, batch size),
+# now the first 5 trials of the Optuna study
 CONFIGS = {
     "mlp_64_32_d0_lr1e-3_wd1e-4_b32":
         {"hidden_dims": [64, 32], "dropout": 0.0, "lr": 1e-3, "weight_decay": 1e-4, "batch_size": 32},
@@ -35,29 +37,50 @@ CONFIGS = {
 }
 
 
-def _params(name: str) -> dict:
-    return {"config": name, **CONFIGS[name], "scaler": "standard"}
+def _trial_params(config: dict) -> dict:
+    """An original configuration expressed with the Optuna parameter names (StandardScaler, as in the original)."""
+    dims = config["hidden_dims"]
+    p = {"n_layers": len(dims), "d_first": dims[0]}
+    if len(dims) >= 3:
+        p["d_middle"] = dims[1]
+    if len(dims) >= 2:
+        p["d_last"] = dims[-1]
+    return {**p, **{k: config[k] for k in ("dropout", "lr", "weight_decay", "batch_size")}, "scaler": "standard"}
 
 
 def n_trials(dataset: str) -> int:
-    return len(CONFIGS)  # grid search: every configuration exactly once
+    return DEFAULT_N_TRIALS[dataset]
 
 
 def default_params(dataset: str) -> dict:
-    return _params(next(iter(CONFIGS)))
+    return {**next(iter(CONFIGS.values())), "scaler": "standard"}
 
 
 def fixed_trials(dataset: str) -> list[dict]:
-    """Every configuration is enqueued, so tuning evaluates exactly the original grid."""
-    return [{"config": name} for name in CONFIGS]
+    """The 5 original configurations always run first, so the study contains the original grid."""
+    return [_trial_params(c) for c in CONFIGS.values()]
 
 
 def suggest_params(trial, dataset: str) -> dict:
-    return _params(trial.suggest_categorical("config", list(CONFIGS)))
+    """MLP search space of Gorishniy et al. (2021): widths of the first, middle (shared) and last layers.
+    Narrowed to at most 4 layers; weight decay widened to 1e-2 and batch sizes 32-256 so that the 5 original
+    configurations lie inside the space."""
+    n_layers = trial.suggest_int("n_layers", 1, 4)
+    d_first = trial.suggest_int("d_first", 16, 512, log=True)
+    d_middle = trial.suggest_int("d_middle", 16, 512, log=True) if n_layers >= 3 else None
+    d_last = trial.suggest_int("d_last", 16, 512, log=True) if n_layers >= 2 else None
+    return {
+        "hidden_dims": [d_first] + [d_middle] * (n_layers - 2) + ([d_last] if n_layers >= 2 else []),
+        "dropout": trial.suggest_float("dropout", 0.0, 0.5),
+        "lr": trial.suggest_float("lr", 1e-5, 1e-2, log=True),
+        "weight_decay": trial.suggest_float("weight_decay", 1e-6, 1e-2, log=True),
+        "batch_size": trial.suggest_categorical("batch_size", [32, 64, 128, 256]),
+        "scaler": trial.suggest_categorical("scaler", ["standard", "quantile"]),
+    }
 
 
 def adapt_to_size(params: dict, n_rows: int) -> dict:
-    return params  # batch sizes 32-128 already suit the smallest learning-curve subset (436 rows)
+    return params  # batch sizes up to 256 still give 2+ batches on the smallest learning-curve subset (436 rows)
 
 
 class MLPModel(BaseModel):
