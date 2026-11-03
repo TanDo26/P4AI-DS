@@ -1,58 +1,58 @@
 {
   "dataset": "kc",
   "model": "tabnet",
-  "mae": 67330.40998658842,
-  "rmse": 129376.98596325716,
-  "r2": 0.8892792133983078,
-  "nrmse": 0.23550173468265792,
+  "mae": 70059.78467514167,
+  "rmse": 123859.12063218934,
+  "r2": 0.8985221894645123,
+  "nrmse": 0.22545770059470338,
   "ci95": {
     "mae": [
-      64240.21416659743,
-      70875.31974856695
+      67056.51149479653,
+      73058.64090986941
     ],
     "rmse": [
-      114205.90226517634,
-      147869.59648715777
+      113460.41109430802,
+      135159.0543711321
     ],
     "r2": [
-      0.8575237209048228,
-      0.9133110257507716
+      0.8795438251902192,
+      0.9148102145400974
     ],
     "nrmse": [
-      0.20978002880449326,
-      0.2686486590995161
+      0.20832450419676526,
+      0.2438550315996507
     ]
   },
-  "fit_time": 275.6819703001529,
-  "predict_time": 0.2132849998306483,
-  "n_epochs": 103,
+  "fit_time": 43.061173499998404,
+  "predict_time": 0.07938930000091204,
+  "n_epochs": 43,
   "n_train": 17290,
   "n_fit": 14696,
   "n_val": 2594,
   "n_test": 4323,
   "params": {
     "n_d": 16,
-    "n_steps": 4,
-    "gamma": 1.3,
+    "n_steps": 3,
+    "gamma": 1.4697856265492306,
     "n_independent": 2,
-    "n_shared": 2,
-    "lambda_sparse": 0.0001,
-    "momentum": 0.02,
+    "n_shared": 1,
+    "lambda_sparse": 0.004085395894225592,
+    "momentum": 0.03956477015710794,
     "lr": 0.02,
     "mask_type": "sparsemax",
-    "batch_size": 256,
-    "virtual_batch_size": 64,
+    "batch_size": 512,
+    "virtual_batch_size": 128,
     "scaler": "quantile",
     "cat_emb_dim": 8
   },
   "env": {
-    "python": "3.12.15",
-    "platform": "Windows-11-10.0.26200-SP0",
-    "device": "cpu",
-    "hardware": "Intel64 Family 6 Model 140 Stepping 1, GenuineIntel",
-    "torch_threads": 2,
+    "python": "3.14.10",
+    "platform": "Windows-11-10.0.26100-SP0",
+    "device": "cuda",
+    "hardware": "NVIDIA GeForce RTX 4060",
+    "torch_threads": 6,
     "packages": {
-      "torch": "2.14.1+cpu",
+      "torch": "2.14.1+cu130",
       "numpy": "2.5.4",
       "pandas": "3.1.0",
       "scikit-learn": "1.9.1",
