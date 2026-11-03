@@ -1,7 +1,6 @@
 # Report (LaTeX) and working notes are kept local
 Report/
-*.md
-!README.md
+plan_*.md
 
 # Python bytecode
 __pycache__/
