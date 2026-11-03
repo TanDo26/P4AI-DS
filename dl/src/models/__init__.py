@@ -2,9 +2,10 @@
 suggest_params, adapt_to_size and build."""
 from types import ModuleType
 
-from . import ft_transformer, mlp, tabnet
+from . import ft_transformer, mlp, modernnca, tabm, tabnet
 
-REGISTRY: dict[str, ModuleType] = {"ft_transformer": ft_transformer, "tabnet": tabnet, "mlp": mlp}
+REGISTRY: dict[str, ModuleType] = {"ft_transformer": ft_transformer, "tabnet": tabnet, "mlp": mlp, "tabm": tabm,
+                                   "modernnca": modernnca}
 
 
 def get_model_module(name: str) -> ModuleType:

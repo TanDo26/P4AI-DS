@@ -3,7 +3,7 @@
     python run.py splits
     python run.py tune  --dataset housing --model ft_transformer --n-trials 50
     python run.py final --dataset housing --model ft_transformer
-    python run.py tune  --dataset kc --model mlp               # the MLP's 5 fixed configurations
+    python run.py tune  --dataset kc --model tabm              # 30 trials on King County by default
     python run.py all   --dataset housing                      # tune + final, every model
     python run.py ablation --dataset kc
     python run.py size-curve
@@ -22,7 +22,7 @@ warnings.filterwarnings("ignore", message=".*ExperimentalWarning.*")
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="DL house-price experiments (FT-Transformer, TabNet, MLP)")
+    parser = argparse.ArgumentParser(description="DL house-price experiments (FT-Transformer, TabNet, MLP, TabM, ModernNCA)")
     parser.add_argument("--device", default="auto", help="auto | cpu | cuda")
     parser.add_argument("--threads", type=int, default=None, help="torch CPU threads")
     sub = parser.add_subparsers(dest="cmd", required=True)
@@ -35,7 +35,7 @@ def main() -> None:
         p.add_argument("--dataset", choices=DATASETS, required=True)
         p.add_argument("--model", choices=MODEL_NAMES, required=name != "all")
         if name != "final":
-            p.add_argument("--n-trials", type=int, default=None, help="total trials (default: 50 housing / 30 kc; MLP: its 5 configs)")
+            p.add_argument("--n-trials", type=int, default=None, help="total trials (default: 50 housing / 30 kc, every model)")
             p.add_argument("--timeout", type=float, default=None, help="seconds")
 
     p = sub.add_parser("ablation")

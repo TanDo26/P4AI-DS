@@ -14,7 +14,8 @@ LOG_PRICE_MAX = 23.0  # exp(23) ~ 1e10: guards expm1 against overflow from a div
 class TabularPreprocessor:
     """kind="numcat": (x_num float32, x_cat int64 | None) for FT-Transformer.
     kind="tabnet": one float32 matrix [numeric | categorical index] plus cat_idxs / cat_dims.
-    kind="onehot": one float32 matrix [numeric | one-hot categoricals] for the MLP (no embedding layer)."""
+    kind="onehot": one float32 matrix [numeric | one-hot categoricals] for the MLP, TabM and ModernNCA.
+    Numeric columns come in the order continuous, ordinal, binary."""
 
     def __init__(self, spec: FeatureSpec, kind: str, scaler: str = "quantile"):
         if kind not in KINDS:
@@ -129,12 +130,16 @@ def preprocessing_markdown(dataset: str, model_name: str, spec: FeatureSpec, sca
         ],
     }[dataset]
     scaler_name = "QuantileTransformer(output_distribution='normal')" if scaler == "quantile" else "StandardScaler"
-    scaler_note = ("StandardScaler cố định như code MLP gốc" if model_name == "mlp"
-                   else "Cột liên tục, lệch phải; scaler chọn bằng CV")
+    scaler_note = "Cột liên tục, lệch phải; scaler chọn bằng CV"
+    if model_name == "modernnca":
+        scaler_note += "; sau đó (cùng các cột thứ tự) qua PLR embedding trong ModernNCA"
+    one_hot = "OneHotEncoder (giá trị lạ → toàn 0)"
     cat_step, cat_note = {
         "ft_transformer": ("OrdinalEncoder (+1, index 0 = giá trị lạ)", "index nguyên → embedding trong FT-Transformer"),
         "tabnet": ("OrdinalEncoder (+1, index 0 = giá trị lạ)", "index nguyên → embedding của TabNet (`cat_idxs`, `cat_dims`)"),
-        "mlp": ("OneHotEncoder (giá trị lạ → toàn 0)", "MLP không có lớp embedding, như code MLP gốc"),
+        "mlp": (one_hot, "MLP không có lớp embedding, như code MLP gốc"),
+        "tabm": (one_hot, "Cùng input với MLP, để so sánh MLP và TabM chỉ khác ở phần ensemble"),
+        "modernnca": (one_hot, "One-hot như cách ModernNCA xử lý categorical trong TALENT"),
     }[model_name]
     lines = [
         f"# Preprocessing — {dataset} / {model_name}",

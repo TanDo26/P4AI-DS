@@ -37,7 +37,7 @@ def final_is_current(dataset: str, model_name: str) -> bool:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Run the whole DL experiment (FT-Transformer, TabNet, MLP)")
+    parser = argparse.ArgumentParser(description="Run the whole DL experiment (FT-Transformer, TabNet, MLP, TabM, ModernNCA)")
     parser.add_argument("--device", default="auto", help="auto | cpu | cuda")
     parser.add_argument("--threads", type=int, default=None, help="torch CPU threads (1 is fastest on CPU)")
     parser.add_argument("--datasets", nargs="+", choices=DATASETS, default=list(DATASETS))

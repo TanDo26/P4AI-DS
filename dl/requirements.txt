@@ -7,6 +7,8 @@ scikit-learn==1.9.1
 optuna==5.0.0
 pytorch-tabnet==4.1.0
 rtdl_revisiting_models==0.0.2
+rtdl_num_embeddings==0.0.12
+tabm==0.0.3
 matplotlib==3.11.2
 joblib==1.6.0
 pytest==9.1.1

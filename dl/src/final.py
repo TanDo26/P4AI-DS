@@ -2,13 +2,13 @@
 other 15% (inner_split, seed 42 - the protocol of the team's original MLP code), then evaluate on the test
 set exactly once.
 
-Explanations (permutation importance for every model, plus attention / TabNet masks) use that 15% validation
-split and are computed before the test split is read. This is the only module that reads it."""
+Explanations (permutation importance for every model, plus attention / TabNet masks / ModernNCA neighbors) use
+that 15% validation split and are computed before the test split is read. This is the only module that reads it."""
 import numpy as np
 import pandas as pd
 
 from .data import load_dataset
-from .explain import ft_attention_importance, permutation_importance, tabnet_importance
+from .explain import ft_attention_importance, modernnca_neighbors, permutation_importance, tabnet_importance
 from .metrics import bootstrap_ci, regression_metrics
 from .models import get_model_module
 from .preprocess import TabularPreprocessor, TargetTransformer, preprocessing_markdown
@@ -17,6 +17,7 @@ from .splits import inner_split, load_test_idx, load_train_idx
 from .utils import Timer, env_info, load_json, results_dir, save_json
 
 MASK_ROWS = 12  # TabNet masks kept for the heatmap of sample validation houses
+NEIGHBOR_ROWS = 5  # validation houses whose nearest training houses (ModernNCA) are saved
 
 
 def run_final(dataset: str, model_name: str, device: str) -> dict:
@@ -55,6 +56,9 @@ def run_final(dataset: str, model_name: str, device: str) -> dict:
         imp.to_csv(out / "feature_importance_tabnet.csv", index=False)
         np.savez(out / "tabnet_masks.npz", feature_names=np.array(pre.feature_names),
                  **{f"step_{s}": m[:MASK_ROWS] for s, m in masks.items()})
+    elif model_name == "modernnca":
+        modernnca_neighbors(model, X_val_t[:NEIGHBOR_ROWS], val_rows[:NEIGHBOR_ROWS], fit_rows, y).to_csv(
+            out / "neighbors_val.csv", index=False)
 
     test_rows = load_test_idx(dataset)
     X_test, y_test = X.iloc[test_rows], y[test_rows]

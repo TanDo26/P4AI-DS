@@ -8,7 +8,7 @@ from experiments import ablation, size_curve
 from src import summary, utils
 from src.config import MODEL_NAMES
 from src.final import run_final
-from src.models import ft_transformer, mlp, tabnet
+from src.models import ft_transformer, mlp, modernnca, tabm, tabnet
 from src.splits import make_splits
 from src.tune import tune
 
@@ -20,7 +20,8 @@ def tmp_outputs(tmp_path, monkeypatch):
         if hasattr(module, "RESULTS_DIR"):
             monkeypatch.setattr(module, "RESULTS_DIR", results)
     monkeypatch.setattr(utils, "FIGURES_DIR", figures)
-    monkeypatch.setattr(ft_transformer, "train_config", lambda n: {"batch_size": 64, "max_epochs": 3, "patience": 2})
+    for module in (ft_transformer, tabm, modernnca):
+        monkeypatch.setattr(module, "train_config", lambda n: {"batch_size": 64, "max_epochs": 3, "patience": 2})
     monkeypatch.setattr(tabnet, "MAX_EPOCHS", 3)
     monkeypatch.setattr(mlp, "MAX_EPOCHS", 3)
     for ds in ("housing", "kc"):
@@ -45,13 +46,16 @@ def test_tune_final_summary(tmp_outputs):
         assert (metrics["n_fit"], metrics["n_val"]) == (370, 66) and 1 <= metrics["n_epochs"] <= 3
     assert (results / "housing" / "ft_transformer" / "figures" / "importance_attention.png").exists()
     assert (results / "housing" / "tabnet" / "figures" / "tabnet_masks.png").exists()
+    neighbors = pd.read_csv(results / "housing" / "modernnca" / "neighbors_val.csv")
+    assert len(neighbors) == 5 * 5 and neighbors.groupby("val_row")["weight"].is_monotonic_decreasing.all()
 
-    # the MLP's tuning runs its fixed configurations in order (2 of the 5 here)
+    # the MLP's study starts with the original code's configurations, in order (2 of the 5 here)
     trials = pd.read_csv(results / "housing" / "mlp" / "optuna_trials.csv")
-    assert list(trials["params_config"]) == list(mlp.CONFIGS)[:2]
+    first_widths = [c["hidden_dims"][0] for c in mlp.CONFIGS.values()]
+    assert list(trials["params_d_first"]) == first_widths[:2]
 
     df = summary.build_summary()
-    assert len(df) == 3 and "| housing | MLP | 2 cấu hình cố định |" in (results / "summary.md").read_text(encoding="utf-8")
+    assert len(df) == len(MODEL_NAMES) and "| housing | ModernNCA |" in (results / "summary.md").read_text(encoding="utf-8")
     assert (figures / "summary" / "cv_rmse.png").exists()
 
 
@@ -59,6 +63,6 @@ def test_ablation_and_size_curve(tmp_outputs):
     results, figures = tmp_outputs
     df = ablation.run_ablation("housing", list(MODEL_NAMES), "cpu")
     # the MLP skips "StandardScaler": its baseline already uses it
-    assert len(df) == 3 * len(ablation.VARIANTS) - 1 and (figures / "housing" / "ablation.png").exists()
+    assert len(df) == len(MODEL_NAMES) * len(ablation.VARIANTS) - 1 and (figures / "housing" / "ablation.png").exists()
     df = size_curve.run_size_curve(list(MODEL_NAMES), "cpu", sizes=(436,), include_full=False)
     assert set(df["n_fold_train"]) == {436} and (figures / "kc" / "size_curve.png").exists()

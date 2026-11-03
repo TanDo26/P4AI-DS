@@ -1,6 +1,7 @@
 """Static report figures (matplotlib). Colors follow a fixed, CVD-validated categorical order:
 a model keeps the same color in every figure; text and axes use neutral ink, never series color."""
 import logging
+import math
 from pathlib import Path
 
 import matplotlib
@@ -20,8 +21,10 @@ MUTED = "#898781"
 GRID = "#e1e0d9"
 AXIS = "#c3c2b7"
 CATEGORICAL = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#6250d6", "#e34948"]
-MODEL_COLORS = {"ft_transformer": CATEGORICAL[0], "tabnet": CATEGORICAL[1], "mlp": CATEGORICAL[2]}
-MODEL_LABELS = {"ft_transformer": "FT-Transformer", "tabnet": "TabNet", "mlp": "MLP"}
+MODEL_COLORS = {"ft_transformer": CATEGORICAL[0], "tabnet": CATEGORICAL[1], "mlp": CATEGORICAL[2],
+                "tabm": CATEGORICAL[3], "modernnca": CATEGORICAL[6]}
+MODEL_LABELS = {"ft_transformer": "FT-Transformer", "tabnet": "TabNet", "mlp": "MLP", "tabm": "TabM",
+                "modernnca": "ModernNCA"}
 DATASET_LABELS = {"housing": "Housing (545 dòng)", "kc": "King County (21.613 dòng)"}
 SEQUENTIAL = LinearSegmentedColormap.from_list(
     "blue", ["#fcfcfb", "#cde2fb", "#86b6ef", "#3987e5", "#256abf", "#184f95", "#0d366b"])
@@ -186,7 +189,8 @@ def cv_comparison(summary: pd.DataFrame, metric: str, path: Path, title: str, yl
     """One panel per dataset (RMSE is not comparable across currencies), one bar per model, ±1 std."""
     datasets = [d for d in ("housing", "kc") if d in set(summary["dataset"])]
     n_max = int(summary.groupby("dataset").size().max())
-    fig, axes = plt.subplots(1, len(datasets), figsize=(4.2 * len(datasets), 3.6), squeeze=False)
+    panel_width = max(4.2, 1.1 * n_max + 0.9)  # room for every model name under its bar
+    fig, axes = plt.subplots(1, len(datasets), figsize=(panel_width * len(datasets), 3.6), squeeze=False)
     for ax, ds in zip(axes[0], datasets):
         d = summary[summary["dataset"] == ds]
         x = np.arange(len(d))
@@ -272,7 +276,8 @@ def ablation(df: pd.DataFrame, path: Path, title: str) -> None:
     ax.invert_yaxis()
     ax.xaxis.set_major_formatter(FuncFormatter(_money))
     ax.set_xlabel("CV RMSE (giá gốc), ±1 std")
-    ax.set_title(title, pad=24)
+    ncol = min(len(models), 3)  # the legend sits between the title and the bars, at most 3 models per row
+    ax.set_title(title, pad=10 + 14 * math.ceil(len(models) / ncol))
     ax.grid(axis="y", visible=False)
-    ax.legend(loc="lower left", bbox_to_anchor=(0, 1.0), ncol=len(models), borderaxespad=0.2)
+    ax.legend(loc="lower left", bbox_to_anchor=(0, 1.0), ncol=ncol, borderaxespad=0.2)
     _save(fig, path)

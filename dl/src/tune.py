@@ -1,6 +1,10 @@
 """Optuna tuning. Objective = mean 5-fold CV RMSE on the original price scale (training data only).
 The study lives in results/<dataset>/<model>/optuna.db, so an interrupted run resumes where it stopped.
 Each completed trial stores its per-fold metrics and learning curves, so export needs no extra CV run."""
+import shutil
+import sqlite3
+from contextlib import closing
+
 import numpy as np
 import optuna
 import pandas as pd
@@ -25,7 +29,7 @@ def load_study(dataset: str, model_name: str) -> optuna.Study:
 
 
 def enqueue_fixed_trials(study: optuna.Study, fixed: list[dict], limit: int) -> None:
-    """Queue (at most `limit` of) the fixed trials (default config; every MLP config) that have not run yet.
+    """Queue (at most `limit` of) the fixed trials (default config; the MLP's 5 original configs) that have not run yet.
     A trial that was interrupted (FAIL, or RUNNING left behind by a killed process) is queued again, so
     resuming never skips one."""
     seen = [t.system_attrs.get("fixed_params", t.params) for t in study.trials
@@ -35,9 +39,37 @@ def enqueue_fixed_trials(study: optuna.Study, fixed: list[dict], limit: int) -> 
         study.enqueue_trial(params)
 
 
+def archive_mlp_grid(dataset: str) -> None:
+    """Before the MLP was tuned with Optuna it ran the original code's 5-configuration grid (Optuna parameter
+    "config"). Those results move to results/<dataset>/mlp_grid, so the new study starts empty and the grid
+    stays available for the report. Their size-curve rows move along: they belong to the grid's best config."""
+    out = results_dir(dataset, "mlp")
+    db = out / "optuna.db"
+    if not db.exists():
+        return
+    with closing(sqlite3.connect(db)) as con:
+        grid = con.execute("SELECT 1 FROM trial_params WHERE param_name = 'config' LIMIT 1").fetchone()
+    if grid is None:
+        return
+    target = out.parent / "mlp_grid"
+    if target.exists():
+        raise FileExistsError(f"{target} already exists: move it or {out} away by hand")
+    shutil.move(out, target)
+    curve = out.parent / "size_curve.csv"
+    if curve.exists():
+        df = pd.read_csv(curve)
+        is_mlp = df["model"] == "mlp"
+        if is_mlp.any():
+            df[is_mlp].to_csv(target / "size_curve.csv", index=False)
+            df[~is_mlp].to_csv(curve, index=False)
+    print(f"[tune] {dataset}/mlp: results of the former 5-config grid moved to {target}", flush=True)
+
+
 def tune(dataset: str, model_name: str, n_trials: int, device: str, timeout: float | None = None) -> None:
     """Run until the study holds n_trials finished (complete + pruned) trials, then export results."""
     module = get_model_module(model_name)
+    if model_name == "mlp":
+        archive_mlp_grid(dataset)
     optuna.logging.set_verbosity(optuna.logging.WARNING)
     study = load_study(dataset, model_name)
     finished = sum(t.state in (TrialState.COMPLETE, TrialState.PRUNED) for t in study.trials)

@@ -73,3 +73,17 @@ def tabnet_importance(model, X_matrix: np.ndarray, feature_names: list[str]) -> 
                        "importance_train": model.reg_.feature_importances_,
                        "importance_val": val_imp / val_imp.sum()})
     return df.sort_values("importance_val", ascending=False, ignore_index=True), masks
+
+
+def modernnca_neighbors(model, X_matrix: np.ndarray, query_rows: np.ndarray, candidate_rows: np.ndarray,
+                        prices: np.ndarray, k: int = 5) -> pd.DataFrame:
+    """For each query house: the k training houses with the largest softmax weight, i.e. the houses whose prices
+    ModernNCA averages. `candidate_rows` are the dataset rows of the model's candidates, in training order."""
+    weights = model.neighbor_weights(X_matrix)
+    rows = []
+    for q, w in zip(query_rows, weights):
+        top = np.argsort(-w)[:k]
+        rows += [{"val_row": int(q), "rank": r + 1, "train_row": int(candidate_rows[j]), "weight": float(w[j]),
+                  "val_price": float(prices[q]), "train_price": float(prices[candidate_rows[j]]),
+                  "weight_top_k": float(w[top].sum())} for r, j in enumerate(top)]
+    return pd.DataFrame(rows)

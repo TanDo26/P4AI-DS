@@ -1,5 +1,5 @@
-"""Preprocessing ablation with each model's default hyperparameters (MLP: its first configuration), scored by
-5-fold CV. The default scaler is Quantile for FT-Transformer / TabNet and Standard for the MLP."""
+"""Preprocessing ablation with each model's default hyperparameters (MLP: its first original configuration),
+scored by 5-fold CV. The default scaler is Quantile, except Standard for the MLP (as in the original code)."""
 import pandas as pd
 
 from src import plots

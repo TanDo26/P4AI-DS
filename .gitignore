@@ -1,0 +1,8 @@
+# Report (LaTeX) and working notes are kept local
+Report/
+*.md
+!README.md
+
+# Python bytecode
+__pycache__/
+*.pyc
