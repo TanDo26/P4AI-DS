@@ -2,41 +2,40 @@
   "dataset": "housing",
   "model": "mlp",
   "params": {
-    "config": "mlp_256_128_d0.1_lr5e-4_wd1e-4_b128",
     "hidden_dims": [
-      256,
-      128
+      312,
+      368
     ],
-    "dropout": 0.1,
-    "lr": 0.0005,
-    "weight_decay": 0.0001,
-    "batch_size": 128,
-    "scaler": "standard"
+    "dropout": 0.15026642393075013,
+    "lr": 0.0001076787748030046,
+    "weight_decay": 7.55569213560738e-05,
+    "batch_size": 64,
+    "scaler": "quantile"
   },
   "cv": {
-    "mae_mean": 716470.3344242852,
-    "mae_std": 53393.395248142486,
-    "rmse_mean": 988391.1346050368,
-    "rmse_std": 60358.08731325385,
-    "r2_mean": 0.6711540376044928,
-    "r2_std": 0.05928623586067974,
-    "nrmse_mean": 0.21037829664446842,
-    "nrmse_std": 0.016241083908281752,
+    "mae_mean": 704993.6183904663,
+    "mae_std": 46351.06405688256,
+    "rmse_mean": 983309.6322436174,
+    "rmse_std": 62119.77131892184,
+    "r2_mean": 0.6748387329635778,
+    "r2_std": 0.05645429189165211,
+    "nrmse_mean": 0.20929421386695685,
+    "nrmse_std": 0.016535111929280224,
     "best_epochs": [
-      46,
-      18,
+      66,
       37,
-      23,
-      26
+      46,
+      53,
+      62
     ],
-    "fit_time_total": 1.7709048998076469
+    "fit_time_total": 3.1921817000002193
   },
   "optuna": {
-    "best_trial": 3,
-    "best_value": 988391.1346050368,
+    "best_trial": 37,
+    "best_value": 983309.6322436174,
     "trials": {
-      "complete": 5,
-      "pruned": 0,
+      "complete": 20,
+      "pruned": 30,
       "fail": 0
     },
     "sampler": "TPESampler(seed=42)",
@@ -45,20 +44,20 @@
   "preprocessing": {
     "use_fe": true,
     "target": "log1p + standardize",
-    "scaler": "standard"
+    "scaler": "quantile"
   },
   "seeds": {
     "data": 42,
     "model": 36
   },
   "env": {
-    "python": "3.12.15",
-    "platform": "Windows-11-10.0.26200-SP0",
-    "device": "cpu",
-    "hardware": "Intel64 Family 6 Model 140 Stepping 1, GenuineIntel",
-    "torch_threads": 1,
+    "python": "3.14.10",
+    "platform": "Windows-11-10.0.26100-SP0",
+    "device": "cuda",
+    "hardware": "NVIDIA GeForce RTX 4060",
+    "torch_threads": 6,
     "packages": {
-      "torch": "2.14.1+cpu",
+      "torch": "2.14.1+cu130",
       "numpy": "2.5.4",
       "pandas": "3.1.0",
       "scikit-learn": "1.9.1",

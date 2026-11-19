@@ -2,41 +2,39 @@
   "dataset": "kc",
   "model": "mlp",
   "params": {
-    "config": "mlp_256_128_d0.1_lr5e-4_wd1e-4_b128",
     "hidden_dims": [
-      256,
-      128
+      457
     ],
-    "dropout": 0.1,
-    "lr": 0.0005,
-    "weight_decay": 0.0001,
+    "dropout": 0.17756947238484808,
+    "lr": 0.00014306062652553211,
+    "weight_decay": 0.008808804186854695,
     "batch_size": 128,
     "scaler": "standard"
   },
   "cv": {
-    "mae_mean": 63223.65469520482,
-    "mae_std": 1625.6638857969856,
-    "rmse_mean": 110254.68762061573,
-    "rmse_std": 3443.9494290962098,
-    "r2_mean": 0.9055425740724375,
-    "r2_std": 0.012804190494517547,
-    "nrmse_mean": 0.2050304282573902,
-    "nrmse_std": 0.006154992584386632,
+    "mae_mean": 62931.65156183273,
+    "mae_std": 1876.4269794796626,
+    "rmse_mean": 109557.12021647091,
+    "rmse_std": 4440.17449994894,
+    "r2_mean": 0.9070905203807407,
+    "r2_std": 0.009273389381727544,
+    "nrmse_mean": 0.2036865906225116,
+    "nrmse_std": 0.006351563630045158,
     "best_epochs": [
-      20,
-      18,
-      30,
-      22,
-      44
+      69,
+      64,
+      88,
+      78,
+      94
     ],
-    "fit_time_total": 33.45624969999699
+    "fit_time_total": 61.89737250000326
   },
   "optuna": {
-    "best_trial": 3,
-    "best_value": 110254.68762061573,
+    "best_trial": 12,
+    "best_value": 109557.12021647091,
     "trials": {
-      "complete": 5,
-      "pruned": 0,
+      "complete": 13,
+      "pruned": 17,
       "fail": 0
     },
     "sampler": "TPESampler(seed=42)",

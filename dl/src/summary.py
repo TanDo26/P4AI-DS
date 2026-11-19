@@ -11,7 +11,7 @@ from . import plots
 from .config import DATASETS, MODEL_NAMES, RESULTS_DIR
 from .data import load_raw
 from .metrics import regression_metrics
-from .utils import figures_dir, load_json
+from .utils import figures_dir, load_json, save_json
 
 
 def error_analysis(dataset: str, model: str) -> dict:
@@ -95,6 +95,15 @@ def build_summary(ml_results: Path | None = None) -> pd.DataFrame:
         df["gap_vs_best_ml"] = (df["test_rmse"] - df["best_ml_test_rmse"]) / df["best_ml_test_rmse"]
     df.to_csv(RESULTS_DIR / "summary.csv", index=False)
     (RESULTS_DIR / "summary.md").write_text(_markdown(df), encoding="utf-8")
+    # one file with the winning hyperparameters of every model; `run.py final` retrains from best_params.json
+    configs = {}
+    for _, r in df.iterrows():
+        info = load_json(RESULTS_DIR / r["dataset"] / r["model"] / "best_params.json")
+        configs.setdefault(r["dataset"], {})[r["model"]] = {
+            "params": info["params"], "seeds": info["seeds"], "cv_rmse": r["cv_rmse_mean"],
+            "test_rmse": r["test_rmse"], "test_r2": r["test_r2"],
+            "command": f"python run.py final --dataset {r['dataset']} --model {r['model']}"}
+    save_json(configs, RESULTS_DIR / "best_configs.json")
 
     figs = figures_dir("summary")
     plots.cv_comparison(df, "rmse", figs / "cv_rmse.png", "CV RMSE (mean ± std, 5 fold)", "CV RMSE (giá gốc)", money=True)

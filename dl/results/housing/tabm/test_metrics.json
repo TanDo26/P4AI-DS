@@ -1,0 +1,57 @@
+{
+  "dataset": "housing",
+  "model": "tabm",
+  "mae": 999219.2862519219,
+  "rmse": 1356701.5712249419,
+  "r2": 0.635846557936386,
+  "nrmse": 0.2709319278619817,
+  "ci95": {
+    "mae": [
+      828338.4933715019,
+      1187240.496786511
+    ],
+    "rmse": [
+      1090565.3231336016,
+      1639219.2075958995
+    ],
+    "r2": [
+      0.5487054125626235,
+      0.7129175455717048
+    ],
+    "nrmse": [
+      0.2256823445899805,
+      0.3115747650442386
+    ]
+  },
+  "fit_time": 1.7595728999003768,
+  "predict_time": 0.005313699832186103,
+  "n_epochs": 7,
+  "n_train": 436,
+  "n_fit": 370,
+  "n_val": 66,
+  "n_test": 109,
+  "params": {
+    "n_blocks": 1,
+    "d_block": 80,
+    "dropout": 0.1566340107870451,
+    "lr": 0.003441503317774667,
+    "weight_decay": 0.0002098685876350953,
+    "scaler": "standard"
+  },
+  "env": {
+    "python": "3.14.10",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "device": "cpu",
+    "hardware": "Intel64 Family 6 Model 140 Stepping 1, GenuineIntel",
+    "torch_threads": 1,
+    "packages": {
+      "torch": "2.14.1+cu130",
+      "numpy": "2.5.4",
+      "pandas": "3.1.0",
+      "scikit-learn": "1.9.1",
+      "optuna": "5.0.0",
+      "pytorch-tabnet": "4.1.0",
+      "rtdl_revisiting_models": "0.0.2"
+    }
+  }
+}

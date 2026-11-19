@@ -13,7 +13,7 @@
 
 | Bước | Cột | Fit trên | Lý do |
 |---|---|---|---|
-| StandardScaler | sqft_living, sqft_lot, sqft_basement, sqft_living15, sqft_lot15, lat, long, dist_downtown_km, days_since_start, house_age, years_since_update | inner_train / phần fit 85% | StandardScaler cố định như code MLP gốc |
+| StandardScaler | sqft_living, sqft_lot, sqft_basement, sqft_living15, sqft_lot15, lat, long, dist_downtown_km, days_since_start, house_age, years_since_update | inner_train / phần fit 85% | Cột liên tục, lệch phải; scaler chọn bằng CV |
 | StandardScaler | bedrooms, bathrooms, floors, view, condition, grade, sale_month | inner_train / phần fit 85% | Cột thứ tự, ít giá trị |
 | Giữ nguyên 0/1 | waterfront, is_renovated, has_basement | — | Cờ nhị phân |
 | OneHotEncoder (giá trị lạ → toàn 0) | zipcode | inner_train / phần fit 85% | MLP không có lớp embedding, như code MLP gốc |
