@@ -1,0 +1,216 @@
+{
+  "housing": {
+    "ft_transformer": {
+      "params": {
+        "n_blocks": 2,
+        "d_block": 32,
+        "attention_dropout": 0.12855239107466943,
+        "ffn_d_hidden_multiplier": 2.1479097880323614,
+        "ffn_dropout": 0.40712953692065634,
+        "residual_dropout": 0.03211619322550961,
+        "lr": 0.000647593447819668,
+        "weight_decay": 1.3873642432750587e-05,
+        "scaler": "quantile"
+      },
+      "seeds": {
+        "data": 42,
+        "model": 36
+      },
+      "cv_rmse": 1010087.1605093436,
+      "test_rmse": 1351028.465967457,
+      "test_r2": 0.6388856367820919,
+      "command": "python run.py final --dataset housing --model ft_transformer"
+    },
+    "tabnet": {
+      "params": {
+        "n_d": 16,
+        "n_steps": 3,
+        "gamma": 1.0271256151328831,
+        "n_independent": 1,
+        "n_shared": 2,
+        "lambda_sparse": 3.576287491088027e-05,
+        "momentum": 0.374541375275057,
+        "lr": 0.01,
+        "mask_type": "entmax",
+        "batch_size": 64,
+        "virtual_batch_size": 32,
+        "scaler": "standard"
+      },
+      "seeds": {
+        "data": 42,
+        "model": 36
+      },
+      "cv_rmse": 1085142.8223815367,
+      "test_rmse": 1510134.232081147,
+      "test_r2": 0.5488230872751803,
+      "command": "python run.py final --dataset housing --model tabnet"
+    },
+    "mlp": {
+      "params": {
+        "hidden_dims": [
+          312,
+          368
+        ],
+        "dropout": 0.15026642393075013,
+        "lr": 0.0001076787748030046,
+        "weight_decay": 7.55569213560738e-05,
+        "batch_size": 64,
+        "scaler": "quantile"
+      },
+      "seeds": {
+        "data": 42,
+        "model": 36
+      },
+      "cv_rmse": 983309.6322436174,
+      "test_rmse": 1369096.637870105,
+      "test_r2": 0.6291622210261746,
+      "command": "python run.py final --dataset housing --model mlp"
+    },
+    "tabm": {
+      "params": {
+        "n_blocks": 1,
+        "d_block": 80,
+        "dropout": 0.1566340107870451,
+        "lr": 0.003441503317774667,
+        "weight_decay": 0.0002098685876350953,
+        "scaler": "standard"
+      },
+      "seeds": {
+        "data": 42,
+        "model": 36
+      },
+      "cv_rmse": 982877.7073997185,
+      "test_rmse": 1356701.5712249419,
+      "test_r2": 0.635846557936386,
+      "command": "python run.py final --dataset housing --model tabm"
+    },
+    "modernnca": {
+      "params": {
+        "dim": 183,
+        "n_blocks": 0,
+        "sample_rate": 0.5892381044958095,
+        "n_frequencies": 22,
+        "frequency_scale": 0.012911983171773795,
+        "d_embedding": 44,
+        "lr": 7.383975803500862e-05,
+        "weight_decay": 1.4362063983982141e-06,
+        "scaler": "quantile"
+      },
+      "seeds": {
+        "data": 42,
+        "model": 36
+      },
+      "cv_rmse": 1057383.4774396722,
+      "test_rmse": 1426255.2351394463,
+      "test_r2": 0.5975515431351068,
+      "command": "python run.py final --dataset housing --model modernnca"
+    }
+  },
+  "kc": {
+    "ft_transformer": {
+      "params": {
+        "n_blocks": 3,
+        "d_block": 384,
+        "attention_dropout": 0.09580236714418428,
+        "ffn_d_hidden_multiplier": 1.8483634970905785,
+        "ffn_dropout": 0.3789484997463522,
+        "residual_dropout": 0.0,
+        "lr": 0.0005791493670913525,
+        "weight_decay": 1.6960411297111614e-06,
+        "scaler": "quantile"
+      },
+      "seeds": {
+        "data": 42,
+        "model": 36
+      },
+      "cv_rmse": 108825.51093246989,
+      "test_rmse": 117455.40261782761,
+      "test_r2": 0.9087440691217289,
+      "command": "python run.py final --dataset kc --model ft_transformer"
+    },
+    "tabnet": {
+      "params": {
+        "n_d": 16,
+        "n_steps": 3,
+        "gamma": 1.4697856265492306,
+        "n_independent": 2,
+        "n_shared": 1,
+        "lambda_sparse": 0.004085395894225592,
+        "momentum": 0.03956477015710794,
+        "lr": 0.02,
+        "mask_type": "sparsemax",
+        "batch_size": 512,
+        "virtual_batch_size": 128,
+        "scaler": "quantile",
+        "cat_emb_dim": 8
+      },
+      "seeds": {
+        "data": 42,
+        "model": 36
+      },
+      "cv_rmse": 116968.89133222048,
+      "test_rmse": 123859.12063218934,
+      "test_r2": 0.8985221894645123,
+      "command": "python run.py final --dataset kc --model tabnet"
+    },
+    "mlp": {
+      "params": {
+        "hidden_dims": [
+          457
+        ],
+        "dropout": 0.17756947238484808,
+        "lr": 0.00014306062652553211,
+        "weight_decay": 0.008808804186854695,
+        "batch_size": 128,
+        "scaler": "standard"
+      },
+      "seeds": {
+        "data": 42,
+        "model": 36
+      },
+      "cv_rmse": 109557.12021647091,
+      "test_rmse": 121010.96368421674,
+      "test_r2": 0.903135521912247,
+      "command": "python run.py final --dataset kc --model mlp"
+    },
+    "tabm": {
+      "params": {
+        "n_blocks": 4,
+        "d_block": 464,
+        "dropout": 0.11517131892248388,
+        "lr": 0.0003052403030697665,
+        "weight_decay": 0.0032953464405002103,
+        "scaler": "standard"
+      },
+      "seeds": {
+        "data": 42,
+        "model": 36
+      },
+      "cv_rmse": 105095.57870838016,
+      "test_rmse": 115891.5010922642,
+      "test_r2": 0.9111580095577245,
+      "command": "python run.py final --dataset kc --model tabm"
+    },
+    "modernnca": {
+      "params": {
+        "dim": 834,
+        "n_blocks": 0,
+        "sample_rate": 0.4747346231131615,
+        "n_frequencies": 32,
+        "frequency_scale": 0.005214331988813725,
+        "d_embedding": 55,
+        "lr": 0.00672093005015611,
+        "weight_decay": 0.00015382308040278996,
+        "scaler": "quantile"
+      },
+      "seeds": {
+        "data": 42,
+        "model": 36
+      },
+      "cv_rmse": 111006.037414936,
+      "test_rmse": 124173.1169581468,
+      "test_r2": 0.8980070227423386,
+      "command": "python run.py final --dataset kc --model modernnca"
+    }
+  }
+}

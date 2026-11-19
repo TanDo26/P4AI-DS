@@ -10,7 +10,7 @@
 
 | Bước | Cột | Fit trên | Lý do |
 |---|---|---|---|
-| StandardScaler | area | inner_train / phần fit 85% | StandardScaler cố định như code MLP gốc |
+| QuantileTransformer(output_distribution='normal') | area | inner_train / phần fit 85% | Cột liên tục, lệch phải; scaler chọn bằng CV |
 | StandardScaler | bedrooms, bathrooms, stories, parking | inner_train / phần fit 85% | Cột thứ tự, ít giá trị |
 | Giữ nguyên 0/1 | mainroad, guestroom, basement, hotwaterheating, airconditioning, prefarea | — | Cờ nhị phân |
 | OneHotEncoder (giá trị lạ → toàn 0) | furnishingstatus | inner_train / phần fit 85% | MLP không có lớp embedding, như code MLP gốc |

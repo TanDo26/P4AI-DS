@@ -132,6 +132,8 @@ Tổng hợp: `results/summary.csv`, `results/summary.md`, `figures/summary/*.pn
 
 `summary.md` có thêm bảng **phân tích sai số trên test**: tỉ lệ tổng bình phương sai số đến từ căn sai nhất / 5 căn sai nhất, tỉ lệ ŷ/y lớn nhất, và RMSE/R² khi bỏ căn sai nhất. Bảng này **chỉ để phân tích**; metric chính không bị thay đổi. Mỗi model còn có `largest_errors_test.csv` liệt kê 10 căn sai nhiều nhất kèm feature gốc. Nhóm đã quyết định **không** kẹp (clip) dự đoán; các trường hợp ngoại suy được báo cáo như một kết quả.
 
+**Config tốt nhất của từng model:** `results/best_configs.json` (do `run.py summary` sinh ra) gom hyperparams, seed, CV RMSE, test RMSE/R² và lệnh chạy lại cho mọi dataset × model. Chạy lại model cuối với đúng config đó: `python run.py final --dataset kc --model tabm` (đọc `results/<dataset>/<model>/best_params.json`).
+
 ## Quy trình đánh giá (tóm tắt)
 
 ```
@@ -197,38 +199,3 @@ ModernNCA (Ye et al., ICLR 2025) thuộc nhánh **dự đoán dựa trên láng 
 - **Cách train:** AdamW, MSE, early stopping. Batch 1024 và patience 20 cho King County; batch 32 và patience 30 cho dữ liệu dưới 2.000 dòng.
 - **Mặc định và không gian tìm kiếm** lấy theo config ModernNCA của TALENT. Với Housing, thu hẹp `dim` / `d_block` còn tối đa 512.
 - **Giải thích riêng:** `neighbors_val.csv` liệt kê các căn train mà model dựa vào để dự đoán một căn validation.
-
-## Cho nhóm ML: dùng chung split
-
-`row` trong các file `splits/<dataset>/*.csv` là vị trí dòng (0-based) trong CSV gốc. Các lệnh sklearn thông thường cho ra **đúng cùng split và fold** (đã kiểm tra trong `tests/test_no_leakage.py`):
-
-```python
-df = pd.read_csv("kc_house_data.csv")
-train_df, test_df = train_test_split(df, test_size=0.2, random_state=42)
-folds = KFold(5, shuffle=True, random_state=42).split(train_df)
-```
-
-`size_subsets.csv` (cột `fold, row, rank`): tập con cỡ `n` của fold `k` là các dòng có `fold == k` và `rank < n`. Nhóm ML có thể chạy model tốt nhất của mình trên cùng các tập con này để vẽ chung learning curve.
-
-Để có cột gap so với ML trong bảng tổng hợp: `python run.py summary --ml-results ml.csv`, với `ml.csv` có ít nhất các cột `dataset, model, test_rmse` (`dataset` là `housing` hoặc `kc`).
-
-## Test
-
-```bash
-python -m pytest -q tests                      # ~3–4 phút, gồm cả test end-to-end
-python -m pytest -q tests -k "not pipeline"    # ~20 giây
-```
-
-## Những điểm cụ thể hoá so với plan
-
-- **Cấu hình train của FT-Transformer theo số dòng train:**
-  - Dưới 2.000 dòng: batch 32, tối đa 400 epoch, patience 30.
-  - Từ 2.000 dòng trở lên: batch 256, tối đa 200 epoch, patience 16.
-
-  Với thí nghiệm chính, quy tắc này trùng với bảng trong plan (Housing / King County). Nó chỉ thực sự khác khi chạy các tập con nhỏ của King County trong learning curve.
-- **Learning curve theo kích thước:** hyperparams cố định, trừ batch size của TabNet được hạ về 64 / 16 khi tập con dưới 2.000 dòng. Batch ≥ 256 tune cho King County chỉ còn 1–2 bước/epoch trên 436 dòng.
-- **Model cuối** dùng protocol của code MLP gốc cho cả 5 model: train trên 85% train, early stopping trên 15% còn lại (seed 42). Permutation importance, attention, mask TabNet và láng giềng ModernNCA tính trên 15% đó, nên test chỉ dùng cho metric và phân tích sai số.
-- **Trial cố định:** cấu hình mặc định của FT-Transformer / TabNet / TabM / ModernNCA và 5 cấu hình gốc của MLP luôn được xếp vào hàng chờ trước các trial do Optuna sinh. Trial bị ngắt giữa chừng sẽ được xếp lại khi chạy tiếp.
-- **Size-curve** ghi thêm cột `params_hash`. Các dòng tính với hyperparams khác hyperparams tốt nhất hiện tại sẽ tự bị tính lại.
-- **Ablation "không feature engineering":** với Housing là không lấy log `area`; với King County là dùng các cột gốc (chỉ bỏ `id`, `date`).
-- **Attention của FT-Transformer:** `rtdl_revisiting_models` không trả attention, nên `explain.py` dùng forward pre-hook để tính lại softmax(QKᵀ/√d) của truy vấn [CLS].

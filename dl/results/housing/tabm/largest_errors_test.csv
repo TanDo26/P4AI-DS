@@ -1,0 +1,11 @@
+row,y_true,y_pred,ratio,area,bedrooms,bathrooms,stories,mainroad,guestroom,basement,hotwaterheating,airconditioning,parking,prefarea,furnishingstatus
+0,13300000.0,8185996.411279317,0.6154884519758885,7420,4,2,3,yes,no,no,no,yes,2,yes,furnished
+2,12250000.0,7490740.383622836,0.6114890109079867,9960,3,2,2,yes,no,yes,no,no,2,yes,semi-furnished
+15,9100000.0,5207831.048347793,0.5722891261920651,6000,4,1,2,yes,no,yes,no,no,2,no,semi-furnished
+18,8890000.0,5984665.365256667,0.6731907047532809,4600,3,2,2,yes,yes,no,no,yes,2,no,furnished
+55,7350000.0,4486092.815226336,0.6103527639763723,6000,3,1,2,yes,no,no,no,yes,1,no,unfurnished
+22,8645000.0,5789873.853465945,0.6697367094813124,8050,3,1,1,yes,yes,yes,no,yes,1,no,furnished
+9,9800000.0,7285930.282327275,0.7434622737068648,5750,3,2,4,yes,yes,no,no,yes,1,yes,unfurnished
+84,6510000.0,4155012.319170458,0.6382507402719597,3760,3,1,2,yes,no,no,yes,no,2,no,semi-furnished
+11,9681000.0,7417820.581912499,0.7662246236868607,6000,4,3,2,yes,yes,yes,yes,no,2,no,semi-furnished
+68,6860000.0,4663800.26998781,0.6798542667620715,6000,3,1,1,yes,no,no,no,yes,1,no,furnished

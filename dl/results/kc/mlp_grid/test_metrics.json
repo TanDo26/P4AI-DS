@@ -1,0 +1,61 @@
+{
+  "dataset": "kc",
+  "model": "mlp",
+  "mae": 65540.28757026786,
+  "rmse": 123008.22144341047,
+  "r2": 0.8999116840366077,
+  "nrmse": 0.22390882980052365,
+  "ci95": {
+    "mae": [
+      62480.78548282724,
+      68649.81904236965
+    ],
+    "rmse": [
+      110393.82516599566,
+      137182.68716301583
+    ],
+    "r2": [
+      0.8761300956052459,
+      0.9206879159166698
+    ],
+    "nrmse": [
+      0.20157079773008788,
+      0.247852265364019
+    ]
+  },
+  "fit_time": 7.022948100002395,
+  "predict_time": 0.004278100001101848,
+  "n_epochs": 19,
+  "n_train": 17290,
+  "n_fit": 14696,
+  "n_val": 2594,
+  "n_test": 4323,
+  "params": {
+    "config": "mlp_256_128_d0.1_lr5e-4_wd1e-4_b128",
+    "hidden_dims": [
+      256,
+      128
+    ],
+    "dropout": 0.1,
+    "lr": 0.0005,
+    "weight_decay": 0.0001,
+    "batch_size": 128,
+    "scaler": "standard"
+  },
+  "env": {
+    "python": "3.14.10",
+    "platform": "Windows-11-10.0.26100-SP0",
+    "device": "cuda",
+    "hardware": "NVIDIA GeForce RTX 4060",
+    "torch_threads": 6,
+    "packages": {
+      "torch": "2.14.1+cu130",
+      "numpy": "2.5.4",
+      "pandas": "3.1.0",
+      "scikit-learn": "1.9.1",
+      "optuna": "5.0.0",
+      "pytorch-tabnet": "4.1.0",
+      "rtdl_revisiting_models": "0.0.2"
+    }
+  }
+}
